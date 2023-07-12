@@ -1,0 +1,15 @@
+# vi: set ft=yaml:
+shared:
+  ingress_domain: tap.local
+  image_registry:
+    project_path: registry:50000/apps
+    username: admin
+    password: supersecret
+  ca_cert_data: |
+    %REGISTRY_CERT_HERE%
+ceip_policy_disclosed: true
+profile: %PROFILE_NAME%
+contour:
+  envoy:
+    service:
+      type: NodePort

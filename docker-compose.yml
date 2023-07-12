@@ -1,0 +1,46 @@
+version: '2.7'
+services:
+  terraform:
+    image: carlosnunez/terraform:1.4.1-arm64
+    working_dir: /work
+    volumes:
+      - $PWD:/work
+    env_file: .env
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+      - AWS_REGION=us-east-2
+  terraform-init:
+    extends: terraform
+    entrypoint: bash
+    environment:
+      DEFAULT_TERRAFORM_STATE_BUCKET_REGION: us-east-2
+    command:
+      - -c
+      - "./scripts/create_backend.sh && \
+         git config --global --add safe.directory '*' && \
+         terraform init -backend-config=/tmp/conf.tfbackend"
+  terraform-plan:
+    extends: terraform
+    command:
+      - plan
+      - -input=false
+  terraform-apply:
+    extends: terraform
+    command:
+      - apply
+      - -input=false
+      - -auto-approve
+      - -compact-warnings
+  terraform-apply-dns:
+    extends: terraform-apply
+    environment:
+      - TF_VAR_domain_name=${DOMAIN_NAME}
+      - TF_VAR_harbor_cluster_ingress_elb=${HARBOR_FQDN}
+      - TF_VAR_tap_local_cluster_ingress_elb_fqdn=${TMC_LOCAL_FQDN}
+  terraform-output:
+    extends: terraform
+    command:
+      - output
+      - -json
