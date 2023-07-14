@@ -50,7 +50,7 @@ create_tanzu_cli_dir() {
 }
 
 install_kapp_controller() {
-  kapp deploy -a kc -f https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml
+  kapp deploy -a kc --yes -f https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml
 }
 
 token="${1?Please provide a Pivotal Network token}"

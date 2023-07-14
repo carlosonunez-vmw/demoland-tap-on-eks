@@ -1,1 +1,6 @@
 .data
+.terraform.*
+.terraform/
+.env
+.env.*
+!.env.example

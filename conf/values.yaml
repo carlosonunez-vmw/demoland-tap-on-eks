@@ -1,0 +1,47 @@
+#@ load("@ytt:data", "data")
+profile: full
+ceip_policy_disclosed: true
+excluded_packages:
+  - cert-manager.tanzu.vmware.com
+  - contour.tanzu.vmware.com
+shared:
+  ingress_issuer: letsencrypt-prod
+  ingress_domain: #@ data.values.domain_name
+  image_registry:
+    project_path: #@ "harbor.{}/tap-{}".format(data.values.domain_name, data.values.tap_version)
+    secret:
+      name: tap-registry
+      namespace: tap-install
+supply_chain: basic
+accelerator:
+  ingress:
+    include: true
+    enable_tls: false
+
+appliveview:
+  ingressEnabled: true
+
+appliveview_connector:
+  backend:
+    ingressEnabled: true
+    sslDeactivated: false
+    host: #@ "appliveview.{}".format(data.values.domain_name)
+
+tap_gui:
+  app_config:
+    catalog:
+      locations:
+        - type: url
+          target: #@ "{}/blob/main/catalog-info.yaml".format(data.values.catalog_url)
+    backend:
+      reading:
+        allow:
+          - host: github.com
+          - host: gitlab.com
+
+metadata_store:
+  ns_for_export_app_cert: #@ data.values.app_namespace
+
+grype:
+  namespace:  #@ data.values.app_namespace
+  targetImagePullSecret: tap-registry

@@ -10,6 +10,6 @@ terraform {
 
 provider "aws" {
   ignore_tags {
-    key_prefixes = ["kubernetes.io/"]
+    key_prefixes = ["kubernetes.io/", "kubernetes.io/cluster/tap-cluster"]
   }
 }

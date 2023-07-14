@@ -11,6 +11,7 @@ services:
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
       - AWS_REGION=us-east-2
+      - TF_VAR_domain_name=${DOMAIN_NAME}
   terraform-init:
     extends: terraform
     entrypoint: bash
@@ -33,12 +34,6 @@ services:
       - -input=false
       - -auto-approve
       - -compact-warnings
-  terraform-apply-dns:
-    extends: terraform-apply
-    environment:
-      - TF_VAR_domain_name=${DOMAIN_NAME}
-      - TF_VAR_harbor_cluster_ingress_elb=${HARBOR_FQDN}
-      - TF_VAR_tap_local_cluster_ingress_elb_fqdn=${TMC_LOCAL_FQDN}
   terraform-output:
     extends: terraform
     command:
