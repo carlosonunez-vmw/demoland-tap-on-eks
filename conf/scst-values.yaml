@@ -1,0 +1,5 @@
+#@ load("@ytt:data", "data")
+registry:
+  server: #@ "harbor.{}".format(data.values.domain_name)
+  repository: #@ "tap-{}/workloads".format(data.values.tap_version)
+external_delivery: false

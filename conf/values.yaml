@@ -28,6 +28,7 @@ appliveview_connector:
     host: #@ "appliveview.{}".format(data.values.domain_name)
 
 tap_gui:
+  metadataStoreAutoconfiguration: true
   app_config:
     catalog:
       locations:

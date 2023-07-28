@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export $(egrep -Ev '^#' "$(dirname "$0")/.env" | xargs -0)
 { docker-compose run --rm terraform-init &&
   docker-compose run --rm terraform-apply; } || exit 1
 
