@@ -1,10 +1,11 @@
 version: '2.7'
 services:
   terraform:
-    image: carlosnunez/terraform:1.4.1-arm64
+    image: hashicorp/terraform:1.5
     working_dir: /work
     volumes:
       - $PWD:/work
+      - tf-data-dir:/data
     env_file: .env
     environment:
       - AWS_ACCESS_KEY_ID
@@ -12,16 +13,7 @@ services:
       - AWS_SESSION_TOKEN
       - AWS_REGION=us-east-2
       - TF_VAR_domain_name=${DOMAIN_NAME}
-  terraform-init:
-    extends: terraform
-    entrypoint: bash
-    environment:
-      DEFAULT_TERRAFORM_STATE_BUCKET_REGION: us-east-2
-    command:
-      - -c
-      - "./scripts/create_backend.sh && \
-         git config --global --add safe.directory '*' && \
-         terraform init -backend-config=/tmp/conf.tfbackend"
+      - TF_DATA_DIR=/data
   terraform-plan:
     extends: terraform
     command:
@@ -39,3 +31,6 @@ services:
     command:
       - output
       - -json
+volumes:
+  tf-config: {}
+  tf-data-dir: {}

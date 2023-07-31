@@ -106,7 +106,7 @@ module "externaldns_irsa_role" {
 
   role_name                     = "externaldns-${random_string.role_suffix.result}"
   attach_external_dns_policy    = true
-  external_dns_hosted_zone_arns = [data.aws_route53_zone.zone.arn]
+  external_dns_hosted_zone_arns = [aws_route53_zone.zone.arn]
 
   oidc_providers = {
     p = {
@@ -121,7 +121,7 @@ module "clusterautoscaler_irsa_role" {
 
   role_name                        = "cluster-autoscaler-${random_string.role_suffix.result}"
   attach_cluster_autoscaler_policy = true
-  external_dns_hosted_zone_arns    = [data.aws_route53_zone.zone.arn]
+  external_dns_hosted_zone_arns    = [aws_route53_zone.zone.arn]
   cluster_autoscaler_cluster_names = [module.eks.cluster_name]
 
   oidc_providers = {

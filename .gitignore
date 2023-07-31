@@ -4,3 +4,7 @@
 .env
 .env.*
 !.env.example
+config.yaml*
+!config.example.yaml
+!config.enc.yaml
+terraform.*

@@ -1,0 +1,49 @@
+# vi: set ft=yaml:
+config:
+    common_unencrypted:
+        namespaces:
+            tanzu_package_repo: tanzu-package-repo-global
+            your_tap_apps: dev
+        directories:
+            tanzu_data_dir: $(dirname "$0")/.data/tanzu
+        repositories:
+            tap_packages: registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:1.5.2
+    terraform:
+        aws:
+            bucket:
+                # The AWS region that Terraform state will be stored in.
+                # Will use AWS_REGION if this is blank.
+                region: ""
+                # The name of the bucket to store Terraform state into.
+                name: ""
+                # The "folder" into which Terraform state within `bucket` will be stored.
+                key: ""
+    dns:
+        # root_zone: The root zone within which a child zone called "platform" for all TAP components
+        # will be created.
+        # For example, given `root_zone: example.com`, the TAP GUI will be
+        # reachable from "tap-gui.platform.example.com".
+        root_zone: ""
+    tanzu_network:
+        # registry_hostname: The registry to find TAP and Tanzu images in.
+        registry_hostname: ""
+        # username: Your Tanzu Network username.
+        username: ""
+        # password: Your Tanzu Network password.
+        password: ""
+    tap:
+        # email_address: The email address to associate TAP certificates with.
+        email_address: ""
+versions_unencrypted:
+    common:
+        # tap: The version of TAP to use.
+        tap: 1.5.2
+    helm_app:
+        external-dns: 0.13.4
+        harbor: 2.6.1
+    tanzu_packages:
+        cert-manager: 1.7.2+vmware.1-tkg.1
+        harbor: 2.6.1+vmware.1-tkg.1
+        tkg-packages: 1.6.1
+urls_unencrypted:
+    kapp-controller: https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml

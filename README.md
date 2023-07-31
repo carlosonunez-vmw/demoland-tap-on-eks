@@ -22,10 +22,48 @@ This repo documents how to install TAP on AWS EKS through a series of scripts.
 
 ## How to Use
 
-First, copy the `.env.example` in this folder to `.env`. Change anything that
-says `change_me` in it.
+### Prerequisites
+
+
+#### For everyone
+
+- Docker
+- [`yq`](https://github.com/mikefarah/yq)
+- An AWS Route53 hosted zone (click
+  [here](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html)
+  to learn how to create one.)
+
+#### For contributors
+
+- [`sops`](https://github.com/getsops/sops) (optional)
+- [`gpg2`]
+
+### Instructions
+
+First, copy `config.example.yaml` to `config.yaml` and change all of the blanks
+to real values.
+
+Afterwards, log into AWS and ensure that the following values are set
+in your environment:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_DEFAULT_REGION`
+- `AWS_SESSION_TOKEN` (if using an STS-generated credential)
 
 Afterwards, every script starts with a number. Run them in order!
+
+> ## Encrypting your config
+>
+> If you are contributing and want to create a pull request, or if you
+> are more security-conscious and don't want your passwords and such
+> in plain-text, encrypt your config file with sops, like this:
+>
+> ```sh
+> sops -p CONFIG_FILE_PGP_FINGERPRINT config.yaml > config.enc.yaml
+> ```
+>
+> Note that changes to `config.enc.yaml` are not accepted at this time.
 
 ## Questions
 

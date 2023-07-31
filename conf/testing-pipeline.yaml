@@ -1,0 +1,28 @@
+#@ load("@ytt:data", "data")
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: noop-test-pipeline
+  namespace: #@ data.values.app_namespace
+  labels:
+    apps.tanzu.vmware.com/pipeline: test
+spec:
+  params:
+    - name: source-url
+    - name: source-revision
+  tasks:
+    - name: test
+      params:
+        - name: source-url
+          value: $(params.source-url)
+        - name: source-revision
+          value: $(params.source-revision)
+      taskSpec:
+        params:
+          - name: source-url
+          - name: source-revision
+        steps:
+          - name: test
+            image: bash:5
+            script: |
+              echo "I've tested your app thoroughly, and everything looks great!"

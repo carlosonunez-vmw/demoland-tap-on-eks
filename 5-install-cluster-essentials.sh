@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
-export $(grep -Ev '^#' "$(dirname "$0")/.env" | xargs -0)
-TAP_VERSION=1.5.2
-CLUSTER_ESSENTIALS_FILE="$(dirname "$(realpath "$0")")/.data/tanzu/cluster-essentials/tanzu-cluster-essentials-darwin-amd64-${TAP_VERSION}.tgz"
-CLUSTER_ESSENTIALS_PATH="$(dirname "$(realpath "$0")")/.data/tanzu/cluster-essentials"
+source "$(dirname "$0")/include/config.sh"
+# shellcheck disable=SC2155
+export INSTALL_BUNDLE="$(get_from_config '.config.tanzu_network.registry_hostname')" || exit 1
+# shellcheck disable=SC2155
+export INSTALL_REGISTRY_HOSTNAME="$(get_from_config '.config.tanzu_network.registry_hostname')" || exit 1
+# shellcheck disable=SC2155
+export INSTALL_REGISTRY_USERNAME="$(get_from_config '.config.tanzu_network.username')" || exit 1
+# shellcheck disable=SC2155
+export INSTALL_REGISTRY_PASSWORD="$(get_from_config '.config.tanzu_network.password')" || exit 1
+TAP_VERSION="$(get_common_version 'tap')" || exit 1
+TANZU_CLI_DATA_DIR="$(get_directory_from_config 'tanzu_data_dir')" || exit 1
+CLUSTER_ESSENTIALS_PATH="${TANZU_CLI_DATA_DIR}/cluster-essentials"
+CLUSTER_ESSENTIALS_FILE="${CLUSTER_ESSENTIALS_PATH}/tanzu-cluster-essentials-darwin-amd64-${TAP_VERSION}.tgz"
 extract_cluster_essentials() {
   test -d "$CLUSTER_ESSENTIALS_PATH" || mkdir -p "$CLUSTER_ESSENTIALS_PATH"
   tar -xvf "$CLUSTER_ESSENTIALS_FILE" -C "$CLUSTER_ESSENTIALS_PATH"
 }
-export INSTALL_BUNDLE=registry.tanzu.vmware.com
-export INSTALL_REGISTRY_USERNAME="${INSTALL_REGISTRY_USERNAME?Please define INSTALL_REGISTRY_USERNAME in .env}"
-export INSTALL_REGISTRY_PASSWORD="${INSTALL_REGISTRY_PASSWORD?Please define INSTALL_REGISTRY_PASSWORD in .env}"
 
 cluster_essentials_downloaded() {
   test -f "$CLUSTER_ESSENTIALS_FILE"
@@ -67,7 +73,7 @@ remove_references_to_installing_kapp_controller() {
   fi
 }
 
-token="${1?Please provide a Pivotal Network token}"
+token="$(get_from_config '.config.pivotal_network.token')" || exit 1
 log_into_pivnet "$token" || exit 1
 cluster_essentials_digest=$(cluster_essentials_digest) || exit 1
 tanzu_cluster_essentials_tar_present || {

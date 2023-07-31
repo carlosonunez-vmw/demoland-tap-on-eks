@@ -11,7 +11,7 @@ output "aws_region" {
 }
 
 output "zone_id" {
-  value = data.aws_route53_zone.zone.id
+  value = aws_route53_zone.zone.id
 }
 
 output "external_dns_role_arn" {
@@ -28,4 +28,11 @@ output "ebs_csi_controller_role_arn" {
 
 output "cluster_autoscaler_role_arn" {
   value = module.clusterautoscaler_irsa_role.iam_role_arn
+}
+
+output "tap-domain" {
+  depends_on = [
+    aws_route53_zone.zone
+  ]
+  value = local.dns_tap_domain
 }

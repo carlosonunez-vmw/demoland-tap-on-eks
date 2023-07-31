@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-export $(egrep -Ev '^#' "$(dirname "$0")/.env" | xargs -0)
-DEV_NAMESPACE="${DEV_NAMESPACE?Please define DEV_NAMESPACE in your .env}"
+source "$(dirname "$0")/include/config.sh"
+DEV_NAMESPACE="$(get_from_config '.config.tap.dev_namespace')" || exit 1
 create_live_update_compatible_kubeconfig() {
   token=$(aws --region us-east-2 eks get-token --cluster-name tap-cluster \
     --output text \

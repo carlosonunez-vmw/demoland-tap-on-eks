@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-export $(egrep -Ev '^#' "$(dirname "$0")/.env" | xargs -0)
-source "$(dirname "$0")/include/profiles.sh"
-TAP_VERSION=1.5.2
-SCST_VERSION=0.12.6
-
+source "$(dirname "$0")/include/config.sh"
+TAP_VERSION="$(get_common_version 'tap')" || exit 1
+SCST_VERSION="$(get_common_version 'scanning-testing-pipeline')" || exit 1
+DOMAIN_NAME="$(docker-compose run --rm terraform output -raw tap-domain)" || exit 1
+DEV_NAMESPACE="$(get_from_config '.config.tap.dev_namespace')" || exit 1
 
 install_tap() {
   template=$(ytt -v domain_name="$DOMAIN_NAME" \

@@ -1,0 +1,88 @@
+#ENC[AES256_GCM,data:WOORpzpxqiZhMKhEU05j9f8=,iv:hfNaO5mXZBEM3jW5KS75YHRyRgSTXHzZLI2VHitTICI=,tag:IsMZffuqfqRkGxsBIa5wAA==,type:comment]
+config:
+    #ENC[AES256_GCM,data:PFI6f52u39eJI/ZYo0WuBGd/yHfiP6afJncPL8WLYDh6+n7See0c3Prp5GVfgscHizWwFnHj1gI7umiPl0217cs3kP7qsPiOJOC57vcYHh4=,iv:3NURc0SU1/3ih47WzW42lAR4G/9R8CoQ+yln0yG7/Ro=,tag:ATlUmDjq/5tt5PyZ2cV9TQ==,type:comment]
+    demo_information_unencrypted:
+        id: sbx
+        name: Sandbox
+    e2e:
+        repo: ENC[AES256_GCM,data:sydRqm3Ejg27sGrTeTrnK9CGhEpkxbfz53Y71Tx0ezbOkpNyEG244FTTMPfwuMxgbP8yLw==,iv:3rslZUZ72UTCtcYFH/MiFhOuMAWPI1RK253xjCGdh7g=,tag:UIyj39lmdfv3byXvWjAcMA==,type:str]
+        ref: ENC[AES256_GCM,data:hX80lg==,iv:vIz8GWgH4K1m/2dL42HIfp4vy3JnsPnePyfgeOI2n5k=,tag:ykFkS6U5TutwEuPMp8icPA==,type:str]
+        expected_output: ENC[AES256_GCM,data:XBuEY0J61xyYfj84apQsPsCGKimaLptXS0+mlz2QJDK6uxPNtA==,iv:icPstNDXp3LdL6Xkrc9CBIo70ZJCdtLKFP5QXxN6z7k=,tag:x3ek5aTy4eTGVj5YhN4L4w==,type:str]
+        workload_file_path: ENC[AES256_GCM,data:8qK5x4vwTh4dORlKqb/arDesvzI=,iv:wN/Obt6HSPmlJDpm7GayPQpQTQ8h28oS7yoV/JUE4DM=,tag:L3sfgSQbbNcEPYnxw4dz/g==,type:str]
+    common_unencrypted:
+        namespaces:
+            tanzu_package_repo: tanzu-package-repo-global
+        directories:
+            tanzu_data_dir: $(dirname "$0")/.data/tanzu
+        repositories:
+            tap_packages: registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:1.5.2
+    terraform:
+        aws:
+            bucket:
+                #ENC[AES256_GCM,data:TYc70tzjz+zTTOeFAuJM8CFSXXCgCbJLIyN5QbjpYbH13P7ZC80O1L8SgzAE3Oja8Vz8mpyzfA==,iv:d31ma+jrWzFq5AAzjympeV31cbA8MPFGrTQCMd/nrXk=,tag:3Wi0rnkLrqZXHUfHyvTUVA==,type:comment]
+                #ENC[AES256_GCM,data:Yescoocn9PmxXlC9B0mkp4WLgK4RIaL6k0JIHvjhBvbzDMQkpYM=,iv:eCSXIKYSxYkxWCj3ewGOBUbYt7acabk9i+s5ymt7070=,tag:bSegYI/Fwou15FcazAcHCA==,type:comment]
+                region: ENC[AES256_GCM,data:eLRs1RxOK80F,iv:lbWdG+Pen1i5Go6tii1yoK8aXtksg4huAQeexq/5LuM=,tag:ol81Y3m/grXC5NVEKHRzXw==,type:str]
+                #ENC[AES256_GCM,data:8ymS4xNx5eWfhrCJfnqgb2vxkPF/u0me2fIp0zQTicxxYO17NJize6QbwII70oAbrSP2sZNj,iv:7P3U9u4jk2I2QJodaUlDmni5ynIKqLe8Hx5RURAaF20=,tag:PqsYMLD1VI8DHBfaHDXl0A==,type:comment]
+                name: ENC[AES256_GCM,data:GWaIyGeFAP9Fn8ORsMi9+UX4LmEAXNbHi/wbJOM=,iv:/DZb4wwAsKvdHrBsX59IUsntHy9eZBQrqC0MbMNC5KQ=,tag:c5+lCCMGFY+tSFEr1lnqaQ==,type:str]
+                #ENC[AES256_GCM,data:FhJHKZhxd0FmzdR/e2eKXyfnknm/sey+gLjE/IL8oB16JW+zx6dpac+S5gjnBXdFQv5fp8c4jOyb85yhugv1sXW3+9s1uLDb,iv:JSGs9gC0kKM3lFFjgmvNVLKDroKQdAf4gMfAqyGkO/0=,tag:s5IcGUga0lZpHQThAWJnpw==,type:comment]
+                key: ENC[AES256_GCM,data:QMiNdg4NyKGO+lFlteLEZBiPnLNy/AUX+dL0M3AmyGysIMWHf24=,iv:BG10ZCVA30P2x13/miElv0bvDrduppVkhg/CMgrNEZw=,tag:+xGU+sj3pVzYm4/jMP6PGQ==,type:str]
+    dns:
+        #ENC[AES256_GCM,data:HJRoiu8Dny7wu6YEJ8J5Ucl50Ps6gXk6Cs22dWkk3El1OS/X2zib0Tle/GTI8haODu11Juqpws4OKVVm01rffMXsiR5t7cPLg4DxnSDiDoVujRc03QVmjsr+4aI=,iv:znwcjgtuyEbXHGKRRRfiyX7tgJnH/RHZ87wSKVlho68=,tag:UGfSZ66Qv+2i7K9XwxuyHQ==,type:comment]
+        #ENC[AES256_GCM,data:+OJ/5Il6BBrl4uDSgDZj4f8=,iv:cesklKH3GBsIKUr9Lcfz4Cxp7hXobLEwJNnmzpvomq8=,tag:hPJv0NC3uB7yE7eSQu7/tg==,type:comment]
+        #ENC[AES256_GCM,data:rIXMAn9x40sJM0MiunmIeCZB0hiTbIVlLkPNzVfyBa9vz6gYf0cyEkFaQOczHtCP5LUlvlxbDMquGMaPmBEoC28=,iv:0x51CsIkKaHSwFY4GMbJ5GpzO32/8U+kAbZmDcwyDi8=,tag:nCHX4F/0HIDkPnRIK3mt0A==,type:comment]
+        #ENC[AES256_GCM,data:m3M/TRWcLcBpPU/wNR59Nd7wOHz7eW5B5qDN4C6Ai98ZmPHVe98UZXkgrsfjz/Q=,iv:yRUTdWZDqvvHg5No0StqYScrVGaCO6OFKrLqLbMAj9U=,tag:1d4tCB1SAu+fBgDzpgIArg==,type:comment]
+        root_zone: ENC[AES256_GCM,data:QRsyLllzWzQYiUXRqFyXNA==,iv:7vzmFLMDPQ87v561CDqcG8CAGjuSL/ACYueuQcV0IVQ=,tag:sPaiWbvnLdDoFXMBrIdmEA==,type:str]
+    tanzu_network:
+        #ENC[AES256_GCM,data:0khXMihpr5RBfaFe4C2jIO5sorqhuDY6WObCD6B8slBNhh6OBSt+eXXv+d8YP4W66aTjWr1MIPPOZbFM6AA9WHE=,iv:KF3TNZyrIVLyYeOqMkqpJFEq9i4mkuURlOXfrqE0shc=,tag:jnY/6oFdOLzBP+575QLQYw==,type:comment]
+        registry_hostname: ENC[AES256_GCM,data:8TKnjPVc2SyIl6HeH+OUDPnDBVgRNBWlBQ==,iv:dWA3h4QfAP427W3l/pzgbdb5VxxULKUQmyNWcEADazg=,tag:m3Z/MNQkwLblP6U6x/FKVw==,type:str]
+        #ENC[AES256_GCM,data:+GpqjMH7fOa0fJ8O0RR0Ta6NGQULAVcir5AZVM1rp6Sjxna7X/Bh,iv:k+JsxMsIbOfUedZpu1/2+qWI13mfwYgb4As7xDZq4ec=,tag:abDwrjDyysbBautKjvYd9g==,type:comment]
+        username: ENC[AES256_GCM,data:lkZLAqVr87HIebbkkKMfiwjR,iv:ikqix+JIT+RNPlTHyxfCelxVWpo6YwcjxXUT0fhSBR0=,tag:W1WBg7eiUdUbbPB3CnIcyw==,type:str]
+        #ENC[AES256_GCM,data:lS5+4B9VlynAFQyedVcolhAJ35QV1+j6jIMBz4dNRsI7Va7b/Mvl,iv:e4cgdNJD0U/uZABm+pvjn1jrOZpKQsrmdBsZY4ZdL9c=,tag:OCssRIu5dEgXXzwHYwS0aQ==,type:comment]
+        password: ENC[AES256_GCM,data:ZgUMGbDIR1aIBcF9qxg=,iv:zAWQQEq3kiVgNL11l2+zaDq1XYQpt6yuk06TbInFUYU=,tag:p4avYzlBWVapgTDz1Hf5Jw==,type:str]
+    pivotal_network:
+        #ENC[AES256_GCM,data:iCOzracCPJNQeCXAGHU1Rvhc+hOz4yku1GsRwhLtC0lka4BmOZO0UE1KLaZ/wlTubmWtgyRMTNangr2o2kg0V8TM2g==,iv:rs6YBxejAZ00TqeRW41OTuNfJWa8PA1pd01EkkKm3SQ=,tag:yjcg64guZzZYJo/YBSx8XQ==,type:comment]
+        token: ENC[AES256_GCM,data:nES3J6rCiZfQYhTFSF+0Wywq3tsIaUfMl+M9jV+QUYYYxw==,iv:AqIE4bfaEKnn6wsM1z1OI3Fdvf8+VNayZxhW/qytw4o=,tag:rrzxcDeAtVkJakPrH0b0Lw==,type:str]
+    tap:
+        #ENC[AES256_GCM,data:wouJxUaDsL31jVulIqjgKJsqeAtNBjA8k1aOgRfe4vA+tkNAgAHulD1JPtPKSkFQGc5l2P0sQcNFReaoizSqNq8r8sBc,iv:WWJIjEcZKkpcseT5iDvCN9EAxjGNRDrpsuK6fzyQIec=,tag:Ui8kRn1n4HvGE7+2w+CTxw==,type:comment]
+        email_address: ""
+        #ENC[AES256_GCM,data:yGSFhnr8KCMCWqNh0hmrtYxn8H2hSbfsklCcNxrn+Cz8cs4ujGmUCPC6UefAW3nMKoF3f6C5eOlccqW8w3VoHaRyew==,iv:FvdL3S9qbwP/ek9npo+azoC/KFkaGp7g6ZBccqG3/eQ=,tag:r8T8lhmpt8wHl7UuVlHEXw==,type:comment]
+        #ENC[AES256_GCM,data:HFdHQvAqIEXSIYWxwDuAnTgZcn1ggzAqMbl9AlgmAcfAho1Vhs4/lFvBekxIEDN6YLDKvA3z9EMUkwxt,iv:71VT/myCK0EsCtl/OUSyoviUwZqqusk5BNDRMTZBHok=,tag:DhCgDtf5CPMj9yon8xBapw==,type:comment]
+        dev_namespace: ENC[AES256_GCM,data:Y8o2vw==,iv:m9xHtuvLqgUQopmIWyXwG+Ulu47/1UDkxV56sVtI4kA=,tag:/Nfj/WeOzmttG0D/PvBF+Q==,type:str]
+versions_unencrypted:
+    common:
+        # tap: The version of TAP to use.
+        tap: 1.5.2
+        scanning-testing-pipeline: 0.12.6
+    helm_app:
+        external-dns: 0.13.4
+        harbor: 2.6.1
+    tanzu_packages:
+        cert-manager: 1.7.2+vmware.1-tkg.1
+        harbor: 2.6.1+vmware.1-tkg.1
+        tkg-packages: 1.6.1
+        contour: 1.20.2+vmware.2-tkg.1
+urls_unencrypted:
+    kapp-controller: https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age: []
+    lastmodified: "2023-07-31T22:26:23Z"
+    mac: ENC[AES256_GCM,data:FODl0DvuHVd14e7Ke9uwglnX+sCrIUPAwi7xc2cu+RCGki3cRTgPNpvNT20RQHjO+vk4RB4IFBT6GZGfmd1rortXwuLUos37kGTuhwxgy/Zrel3FQTwj69EL8y8C5YCUjD/oiEIeWivjITTv2K7pWkQs5Jg5TPDesAP4QW1KiB4=,iv:r+4X4Dz4H+Pkp5JPXlkVk2PT6s7PqOiq6KVjJLWqUi4=,tag:5TWbr7G8vLWMmOB9KGfvVA==,type:str]
+    pgp:
+        - created_at: "2023-07-31T15:45:18Z"
+          enc: |
+            -----BEGIN PGP MESSAGE-----
+
+            hF4DWx0kYG1M2WASAQdAemPJbHHCIMMhd51aUU3pucMX0nOZ0LmOyLzwln6uOUAw
+            qVmDJoWO9sM3PEUTq6ES9HACWZ4RGM6wmYnBwiOduTzzFM5nnnud1OrRktsum1ZJ
+            1GgBCQIQr5DqhD5aa5VvbvnEbSdH2ayRpNBZKsVll/8tLqIHWHFv9lA+/rvX2LsM
+            Y6hG7MWG67/Kaua7o+9WziKEE5kjFUJGC6xHd8OQtOVN5VLBD+6KfrCbhwWHRsW4
+            H2DrX3ydwGLmAQ==
+            =NWht
+            -----END PGP MESSAGE-----
+          fp: 6AA971B70BF510A5BAF3BA828502EDF33CBD2859
+    unencrypted_suffix: _unencrypted
+    version: 3.7.3
