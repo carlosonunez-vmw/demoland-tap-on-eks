@@ -1,0 +1,12 @@
+apiVersion: sql.tanzu.vmware.com/v1
+kind: Postgres
+metadata:
+  name: customer-database
+spec:
+  storageClassName: default
+  monitorStorageClassName: default
+  storageSize: 2G
+  pgConfig:
+    dbname: customer-database
+    username: pgadmin
+    appUser: pgappuser

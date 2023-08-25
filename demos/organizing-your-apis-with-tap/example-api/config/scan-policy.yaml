@@ -1,18 +1,23 @@
----
 apiVersion: scanning.apps.tanzu.vmware.com/v1beta1
 kind: ScanPolicy
 metadata:
-  name: scan-policy
   labels:
-    'app.kubernetes.io/part-of': 'enable-in-gui'
+    app.kubernetes.io/part-of: enable-in-gui
+  name: scan-policy-for-example-api
 spec:
   regoFile: |
     package main
 
     # Accepted Values: "Critical", "High", "Medium", "Low", "Negligible", "UnknownSeverity"
     notAllowedSeverities := ["Critical"]
-    ignoreCves := [ "CVE-2015-0244", "CVE-2015-3166", "CVE-2018-1115", "CVE-2019-10211",
-    "GHSA-36p3-wjmg-h94x" ]
+    ignoreCves := [
+      "CVE-2015-0244",
+      "CVE-2015-3166",
+      "CVE-2018-1115",
+      "CVE-2019-10211",
+      "GHSA-36p3-wjmg-h94x"
+    ]
+
     contains(array, elem) = true {
       array[_] = elem
     } else = false { true }
