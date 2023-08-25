@@ -68,6 +68,19 @@ create_tap_project() {
   fi
 }
 
+create_app_images_project() {
+  curl -u "admin:$2" \
+    "https://harbor.$1/api/v2.0/projects" \
+     -X POST \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+    --data-raw '{"project_name":"tap-app-images","metadata":{"public":"true"},"storage_limit":-1,"registry_id":null}'
+  if test "$?" -ne 0
+  then
+    >&2 echo "WARNING: Unable to create tap-$TAP_VERSION project in Harbor at harbor.$1; do so manually."
+  fi
+}
+
 domain="$(docker-compose run --rm terraform output -raw tap-domain)" || exit 1
 harbor_password="$(docker-compose run --rm terraform output -raw harbor_admin_password)" || exit 1
 add_bitnami_helm_repo || exit 1
@@ -76,4 +89,5 @@ chart_version=$(helm search repo bitnami/harbor --versions --output json |
   sort -r |
   head -1) &&
   install_harbor "$domain" "$chart_version" "$harbor_password" &&
-  create_tap_project "$domain" "$harbor_password"
+  create_tap_project "$domain" "$harbor_password" &&
+  create_app_images_project "$domain" "$harbor_password"
