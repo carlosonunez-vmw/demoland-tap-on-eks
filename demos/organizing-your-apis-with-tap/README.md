@@ -67,26 +67,24 @@ from an accelerator.
 
 2. Log into Harbor and create a public project called `tap-app-images`.
 
-#### Running the Demo
-
-1. Log into the TAP GUI. If you used this stack to provision TAP,
+3. Log into the TAP GUI. If you used this stack to provision TAP,
    it will be accessible from `tap-gui.${dns_root_zone_from_config}`.
 
-2. Click on the "Create" button. Choose the "Tanzu Java Restful Web App"
+4. Click on the "Create" button. Choose the "Tanzu Java Restful Web App"
    accelerator with these options:
    - **Expose API Endpoint**: checked
    - **Use Spring Boot 3.0?**: checked
    - **Java Version**: Java 17
 
-3. Click "Next", then download the ZIP file into the folder of your choice and
+5. Click "Next", then download the ZIP file into the folder of your choice and
    extract.
 
 > ✅ If you want to skip using the GUI, an example API generated from this
 > accelerator is included in this directory under `example-api`.
 
-4. Open a terminal.
+6. Open a terminal.
 
-5. Open `config/service-operator/postgres-instance.yaml` and remove the
+7. Open `config/service-operator/postgres-instance.yaml` and remove the
    following:
 
    ```yaml
@@ -94,7 +92,10 @@ from an accelerator.
    memory: whatever
    ```
 
-6. Create the testing pipeline and database.
+8. Change the references to `storageClass` to `gp2` (or whatever storage
+   class you'd like to use).
+
+9. Create the testing pipeline and database.
 
    ```sh
    kubectl create -n service-instances
@@ -104,7 +105,7 @@ from an accelerator.
    kubectl apply -f "${DIRECTORY}/config/service-operator/postgres-resource-claim-policy.yaml"
    ```
 
-7. At this time of writing, `example-api` ships with five critical CVEs.
+10. At this time of writing, `example-api` ships with five critical CVEs.
    Run `kubectl edit scanpolicy scan-policy -n apps` and modify
    `ignoreCves` to the following list:
 
@@ -118,7 +119,7 @@ from an accelerator.
     ]
    ```
 
-8. Create the workload:
+11. Create the workload:
 
     ```sh
     tanzu apps workload apply \
@@ -159,3 +160,13 @@ from an accelerator.
       Build Service to write database information in a way that
       your app will automatically consume.
 
+## Troubleshooting
+
+### I can't find the API in the API portal
+
+- Check that the `apidescriptor` isn't in a failed state: `kubectl get -n
+  [DEV_NS] apidescriptor`
+- If it is, you'll need to re-apply the `APIDescriptor`'s YAML since it doesn't
+  seem to automatically reconcile. `kubectl get -n [DEV_NS] apidescriptor
+  [FAILING_DESC] -o yaml > /tmp/patch.yaml && kubectl apply -n [DEV_NS] -f
+  /tmp/patch.yaml`
