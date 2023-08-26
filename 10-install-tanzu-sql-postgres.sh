@@ -2,6 +2,7 @@
 source "$(dirname "$0")/include/config.sh"
 TANZU_DATA_DIR="$(get_directory_from_config 'tanzu_data_dir')" || exit 1
 TANZU_PACKAGE_NAMESPACE="$(get_namespace 'tanzu_package_repo')" || exit 1
+DEV_NAMESPACE="$(get_from_config '.config.tap.dev_namespace')" || exit 1
 HELM_REGISTRY_FQDN=registry.tanzu.vmware.com
 CHART_PATH_POSTGRES="oci://$HELM_REGISTRY_FQDN/tanzu-sql-postgres/vmware-sql-postgres-operator"
 CHART_VERSION_POSTGRES="v2.2.0"
@@ -29,12 +30,15 @@ metadata:
 }
 
 create_registry_secret() {
-  kubectl create -n tanzu-data-postgres secret docker-registry vmware-tanzu-network \
-    --docker-server="$HELM_REGISTRY_FQDN" \
-    --docker-username="$1" \
-    --docker-password="$2" \
-    --dry-run -o yaml | kapp deploy -n "$TANZU_PACKAGE_NAMESPACE" \
-      -a tanzu-sql-postgres-registry-secret -f - --yes
+  for ns in tanzu-data-postgres  "$DEV_NAMESPACE"
+  do
+    kubectl create -n "$ns" secret docker-registry vmware-tanzu-network \
+      --docker-server="$HELM_REGISTRY_FQDN" \
+      --docker-username="$1" \
+      --docker-password="$2" \
+      --dry-run -o yaml || return 1
+    echo "---"
+  done | kapp deploy -n "$TANZU_PACKAGE_NAMESPACE"  -a tanzu-sql-postgres-registry-secret -f - --yes
 }
 
 install_chart_postgres() {
