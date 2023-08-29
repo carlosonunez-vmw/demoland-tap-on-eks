@@ -1,0 +1,62 @@
+id: b5edffc7-f7ce-4abd-9b68-9f7c1adad152
+timestamp: 2023-08-25T18:56:59Z
+username: guest
+source: TAP-GUI
+accelerator:
+  name: java-rest-service
+  source:
+    image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:2e930e66842ec6e2dd73a0b633801886ce869d47e8462339688397d1e40d5dc7
+fragments:
+  - name: spring-boot-database
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:2c6283602cb7a76b2e1112756e9482184e51b3c020b604376229a3b8463916a2
+  - name: spring-boot-postgresql
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:2d1a485938a4dfc32d2c2f54a88e1d34ac5cdae1fecd22ba1532b6a40f4901b5
+  - name: spring-boot-mysql
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:0fca202661bcfed6c736859850196a67e1f4251c6d28204102465b53ecb5bdd6
+  - name: testcontainers-mysql
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:62d9d0c8052a80ed5991d5e8aa47f1f1f571724e0bed23996970e692a1733cb5
+  - name: build-wrapper-maven
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:195a3ca6585fa91c41292584a19c2807c72ecdf986ce860a7147451e89d467d4
+  - name: java-version
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:fa976ccf1609cb69e74a0162f0f49581fd0d393003e2fbe5d54d12eae62b4ff9
+  - name: build-wrapper-gradle
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:5480259d6a29a11f0cc482cd304501d74ccd89dd7207f2d639d6f0d8eedc3bf8
+  - name: live-update
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:f38e89653d0a59a5d14e1e13ad1d2928dc2b4ff292825071bdfdab30a2dc5019
+  - name: spring-boot-h2
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:4d88362e7f6458c070947e5f46b08b919978f5dd822f22e05164cc018a339313
+  - name: tap-workload
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:dbf0dedb6848ad8a7704c1c19465a1ddae9039b0e63c1dd0df3e2ed9cbda6093
+  - name: testcontainers-postgresql
+    source:
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.5.2/tap-packages@sha256:80071821506caf69120accee548b5e0eeb09bbaa2ce21606253ce90fdb2632aa
+options:
+  apiDescription: Manage customer profiles
+  apiOwner: customer-relations-department
+  apiSystem: profile-management
+  artifactId: example-customer
+  buildTool: maven
+  databaseIntegrationTestType: testcontainers
+  databaseMigrationTool: flyway
+  databaseName: customer-database
+  databasePostgresStorageClass: default
+  databaseType: postgres
+  exposeOpenAPIEndpoint: true
+  groupId: com.example
+  includeBuildToolWrapper: true
+  javaVersion: 17
+  liveUpdateIDESupport: true
+  packageName: com.example.customerprofile
+  projectName: example-api
+  sourceRepositoryPrefix: harbor.platform.sbx.tanzufederal.com
+  updateBoot3: true

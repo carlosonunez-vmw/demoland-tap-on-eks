@@ -3,13 +3,15 @@ source "$(dirname "$0")/include/config.sh"
 DEV_NAMESPACE="$(get_from_config '.config.tap.dev_namespace')" || exit 1
 DOMAIN_NAME="$(docker-compose run --rm terraform output -raw tap-domain)" || exit 1
 
+harbor_password="$(docker-compose run --rm terraform output -raw harbor_admin_password)" || exit 1
+
 kubectl get ns "$DEV_NAMESPACE" &>/dev/null ||
   kubectl create ns "$DEV_NAMESPACE"
 
 registry_secret=$(kubectl create secret docker-registry registry-credentials \
     --docker-server="harbor.${DOMAIN_NAME}" \
     --docker-username=admin \
-    --docker-password=supersecret \
+    --docker-password="$harbor_password" \
     -n "$DEV_NAMESPACE" \
     -o yaml \
     --dry-run=client) || return 1
