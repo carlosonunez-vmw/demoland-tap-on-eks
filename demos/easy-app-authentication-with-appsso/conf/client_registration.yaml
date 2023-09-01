@@ -1,0 +1,24 @@
+#@ load("@ytt:data", "data")
+apiVersion: sso.apps.tanzu.vmware.com/v1alpha1
+kind: ClientRegistration
+metadata:
+   name: example-app-client
+   namespace: apps
+spec:
+   authServerSelector:
+      matchLabels:
+         name: insecure-auth-server
+         env: sandbox
+   redirectURIs:
+     - #@ "http://example-app.{}/oauth2/callback".format(data.values.domain)
+   requireUserConsent: false
+   clientAuthenticationMethod: client_secret_basic
+   authorizationGrantTypes:
+      - "client_credentials"
+      - "authorization_code"
+   scopes:
+      - name: "openid"
+      - name: "email"
+      - name: "profile"
+      - name: "roles"
+      - name: "message.read"

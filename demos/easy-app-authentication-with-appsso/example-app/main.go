@@ -5,10 +5,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func validateEnvironment() error {
-	for _, k := range []string{"CLIENT_ID", "CLIENT_SECRET", "ISSUER_URI"} {
+	for _, k := range []string{"AUTH_SERVICE_URI"} {
 		if os.Getenv(k) == "" {
 			return fmt.Errorf("Please set: %s", k)
 		}
@@ -27,13 +28,26 @@ func main() {
 }
 
 func ServeIndexPage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "<html><a href=\"%s\">Click here to log in!</a></html>", os.Getenv("ISSUER_URI"))
+	page := `
+<html>
+<head></head>
+<body>
+<a href=\"%s\">Click here to log in</a>
+</body>
+</html>
+`
+	fmt.Fprintf(w, page, os.Getenv("AUTH_SERVICE_URI"))
 }
 
 func RedirectHandler(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't parse query: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	encodedToken := strings.ReplaceAll(r.Header.Get("Authorization"), "Bearer ", "")
+	page := `
+<html>
+<body>
+<div><b>Welcome!</div>
+<div><p>You're logged in. Your encoded token is: %s</p></div>
+</body>
+</html>
+`
+	fmt.Fprintf(w, page, encodedToken)
 }
