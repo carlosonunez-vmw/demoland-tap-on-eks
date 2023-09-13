@@ -11,19 +11,19 @@ install_tap() {
     -v catalog_url="$GIT_CATALOGS_URL" \
     -v app_namespace="$DEV_NAMESPACE" \
     -f "$(dirname "$0")/conf/values.yaml") || return 1
-  tanzu package install tap \
-    -p tap.tanzu.vmware.com \
-    -v "$TAP_VERSION" \
-    --values-file <(echo "$template") \
-    -n tap-install
-}
+      tanzu package install tap \
+        -p tap.tanzu.vmware.com \
+        -v "$TAP_VERSION" \
+        --values-file <(echo "$template") \
+        -n tap-install
+      }
 
-install_source_code_scan_and_test_supply_chain() {
-  template=$(ytt -v domain_name="$DOMAIN_NAME" \
-    -v tap_version="$TAP_VERSION" \
-    -f "$(dirname "$0")/conf/scst-values.yaml") || return 1
-  tanzu package install ootb-supply-chain-testing-scanning \
-    -p ootb-supply-chain-testing-scanning.tanzu.vmware.com \
+      install_source_code_scan_and_test_supply_chain() {
+        template=$(ytt -v domain_name="$DOMAIN_NAME" \
+          -v tap_version="$TAP_VERSION" \
+          -f "$(dirname "$0")/conf/scst-values.yaml") || return 1
+                  tanzu package install ootb-supply-chain-testing-scanning \
+                    -p ootb-supply-chain-testing-scanning.tanzu.vmware.com \
     -v "$SCST_VERSION" \
     --values-file <(echo "$template") \
     -n tap-install

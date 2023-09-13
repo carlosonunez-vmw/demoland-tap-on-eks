@@ -15,7 +15,7 @@ config:
         directories:
             tanzu_data_dir: $(dirname "$0")/.data/tanzu
         repositories:
-            tap_packages: registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:1.5.2
+            tap_packages: registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:1.6.1
     terraform:
         aws:
             bucket:
@@ -51,7 +51,7 @@ config:
 versions_unencrypted:
     common:
         # tap: The version of TAP to use.
-        tap: 1.5.2
+        tap: 1.6.1
         scanning-testing-pipeline: 0.12.6
     helm_app:
         external-dns: 0.13.4
@@ -69,8 +69,8 @@ sops:
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2023-07-31T22:26:23Z"
-    mac: ENC[AES256_GCM,data:FODl0DvuHVd14e7Ke9uwglnX+sCrIUPAwi7xc2cu+RCGki3cRTgPNpvNT20RQHjO+vk4RB4IFBT6GZGfmd1rortXwuLUos37kGTuhwxgy/Zrel3FQTwj69EL8y8C5YCUjD/oiEIeWivjITTv2K7pWkQs5Jg5TPDesAP4QW1KiB4=,iv:r+4X4Dz4H+Pkp5JPXlkVk2PT6s7PqOiq6KVjJLWqUi4=,tag:5TWbr7G8vLWMmOB9KGfvVA==,type:str]
+    lastmodified: "2023-09-11T19:26:31Z"
+    mac: ENC[AES256_GCM,data:9Vq4SzHNXrphhm2GsPpjsC+OxRrDPHNsI9AyJzIafT2DkrC6HIkZj7O/xkh4SnVtRm0eXPFQOdWulRMhfIv12F+b952jM3DFY1J5aIiN3sqjQJcpNrnlP1zAwh58ipSnqj0Qb5O5sUrKd26znyqd3fsweV4FE+GCpmCmVyREi9s=,iv:1fVQBCDXfgNvpBYAUxUR6KRbHGG1hE6Hd5dp4H7ZnMM=,tag:e3W0emLEpwz7a2w2DYCqHA==,type:str]
     pgp:
         - created_at: "2023-07-31T15:45:18Z"
           enc: |

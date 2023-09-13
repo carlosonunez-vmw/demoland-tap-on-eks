@@ -78,7 +78,7 @@ log_into_pivnet "$token" || exit 1
 cluster_essentials_digest=$(cluster_essentials_digest) || exit 1
 tanzu_cluster_essentials_tar_present || {
   create_tanzu_cluster_essentials_dir &&
-  download_tanzu_cluster_essentials_with_pivnet && exit 1;
+  download_tanzu_cluster_essentials_with_pivnet || exit 1;
   extract_cluster_essentials;
 } &&
 remove_references_to_installing_kapp_controller;
