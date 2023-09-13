@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/include/config.sh"
 export $(egrep -Ev '^#' "$(dirname "$0")/.env" | xargs -0)
-TAP_VERSION=1.5.2
+TAP_VERSION="$(get_common_version 'tap')" || exit 1
 TANZU_PACKAGE_NAMESPACE="$(get_namespace 'tanzu_package_repo')" || exit 1
 DOMAIN_NAME="$(docker-compose run --rm terraform output -raw tap-domain)" || exit 1
 
