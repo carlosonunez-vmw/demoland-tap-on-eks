@@ -30,6 +30,8 @@ appliveview_connector:
 tap_gui:
   metadataStoreAutoconfiguration: true
   app_config:
+    auth:
+      allowGuestAccess: true
     catalog:
       locations:
         - type: url
