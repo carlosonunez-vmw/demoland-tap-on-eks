@@ -28,11 +28,13 @@ authentication into their apps from a centralized place.
    below, which are `admin` and `supersecret` respectively:
 
    ```sh
-   ytt -v auth_server_username=admin -v auth_server_password=supersecret \
-    -v auth_server_privkey="$(cat /tmp/key.pem)" \
-    -v auth_server_pubkey="$(cat /tmp/key.pub)" \
-    -f ./demos/easy-app-authentication-with-appsso/conf/authserver.yaml |
-    kubectl apply -f -
+   openssl genrsa -out /tmp/key.pem 3072 &&
+    openssl rsa -in /tmp/key.pem -pubout -out /tmp/key.pub &&
+       ytt -v auth_server_username=admin -v auth_server_password=supersecret \
+        -v auth_server_privkey="$(cat /tmp/key.pem)" \
+        -v auth_server_pubkey="$(cat /tmp/key.pub)" \
+        -f ./demos/easy-app-authentication-with-appsso/conf/authserver.yaml |
+        kubectl apply -f -
    ```
 
    Afterwards, wait for the `AuthServer` to come online:
