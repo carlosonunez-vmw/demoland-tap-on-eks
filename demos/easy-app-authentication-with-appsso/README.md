@@ -23,6 +23,8 @@ authentication into their apps from a centralized place.
 
 ### Instructions
 
+#### Creating a consumable AppSSO service
+
 1. Create an insecure `AuthServer`. This `AuthServer` will only grant tokens if
    a user provides the username and password provided to the `ytt` command
    below, which are `admin` and `supersecret` respectively:
@@ -43,48 +45,70 @@ authentication into their apps from a centralized place.
    kubectl wait --for=condition=Ready authserver insecure-auth-server
    ```
 
-2. Register a new client of that `AuthServer`. This way, we can obtain a client
-   ID and a client secret to use for logging in via this `AuthServer`.
-
-   You can think of this as similar to creating a new "app" for a Google Cloud
-   API or an app to use within Okta.
+2. Create a `ClusterWorkloadRegistrationClass` that uses Services Toolkit to
+   expose a service class that points to the `AuthServer`.
 
    ```sh
-   ytt -v domain=$YOUR_TAP_CLUSTER_DOMAIN \
-    -f ./demos/easy-app-authentication-with-appsso/conf/client_registration.yaml |
+   kubectl apply -f
+   ./demos/easy-app-authentication-with-appsso/conf/clusterworkloadregistrationclass.yaml
+   ```
+
+   Wait for it to become ready.
+
+   ```sh
+   kubectl wait --for=condition=Ready cwrc demo-class-sbx
+   ```
+
+3. Verify that the `AuthServer` has a service class associated with it.
+
+    ```sh
+    tanzu service class get demo-class-sbx
+    ```
+
+    This will dump a ton of information if it was successfully registered.
+
+4. Now it's time to set up our authenticated app.
+
+   Create the `ClassClaim` that's in `example-app/config`:
+
+   ```sh
+   ytt -v appNS=apps -v className=demo-class-sbx \
+    -f ./demos/easy-app-authentication-with-appsso/example-app/config/ssoclassclaim.yaml |
     kubectl apply -f -
    ```
 
-   Wait for the `ClientRegistration` to become `Ready`:
+   Then wait for it to become ready.
 
    ```sh
-   kubectl get clientregistrations -n apps
+   kubectl wait --for=condition=Ready -n apps \
+    classclaim example-app
    ```
 
-3. Create an instance of `oauth-proxy` in the `default` namespace.
+5. Deploy the workload. Wait for a `Delivery` to be stamped out.
 
-   This will provide a OAuth client that brokers the OAuth2 login flow on your
-   application's behalf.
-
-   ```sh
-   ytt -v domain=$YOUR_TAP_CLUSTER_DOMAIN \
-    -f ./demos/easy-app-authentication-with-appsso/example-app/dependencies/oauth_proxy.yaml  |
-    kubectl apply -f -
-   ```
-
-   Wait for the `oauth-proxy-for-example-app` `Deployment` to become fully ready
-   (i.e. `1/1` replicas available)
-
-   ```sh
-   kubectl get deployment oauth-proxy-for-example-app
-   ```
-
-   This will also generate an `HTTPProxy` resource that responds to the URI
-   `http://oauth-proxy-for-example-app.$YOUR_TAP_CLUSTER_DOMAIN`.
-
-   This URI is externally-accessible. 
-
+  ```sh
+  tanzu apps workload apply \
+    -f ./demos/easy-app-authentication-with-appsso/example-app/config/workload.yaml \
+    --local-path ./demos/easy-app-authentication-with-appsso/example-app \
+    --namespace apps \
+    --tail \
+    --yes
+  ```
 ## Things To Point Out
+
+### The `AuthServer`
+
+**Audience**: Security Engineers, Platform Engineers
+
+The `AuthServer` is a web service that brokers creating JWTs for apps that use
+it through `ClientRegistrations` and your upstream identity provider (IdP).
+
+While TAP comes with an insecure test `AuthServer` to experiment with the
+feature, it is compatible with any IdP that speaks OAuth2.
+
+You can think of this as an interface for apps that want to secure some
+endpoints with a login. As long as they can register themselves, they'll get
+instant SSO for free.
 
 ### Example 1
 
