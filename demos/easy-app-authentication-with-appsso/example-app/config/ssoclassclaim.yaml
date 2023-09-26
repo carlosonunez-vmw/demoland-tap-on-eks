@@ -1,0 +1,26 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ClassClaim
+metadata:
+  name: example-app
+  namespace: #@ data.values.appNS
+spec:
+  classRef:
+    name: #@ data.values.className
+  parameters:
+    workloadRef:
+      name: example-app
+    redirectPaths:
+      - /user-profile
+      - /customer-profiles/list
+      - /
+    scopes:
+      - name: openid
+      - name: email
+      - name: profile
+      - name: message.read
+      - name: message.write
+    authorizationGrantTypes:
+      - authorization_code
+    clientAuthenticationMethod: none

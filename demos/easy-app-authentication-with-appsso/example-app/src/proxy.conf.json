@@ -1,0 +1,8 @@
+{
+  "/api": {
+    "target": "http://local-development",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
