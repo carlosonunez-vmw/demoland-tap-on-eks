@@ -84,6 +84,19 @@ authentication into their apps from a centralized place.
     classclaim example-app
    ```
 
+5. Generate a repo from the "Angular Frontend" accelerator:
+
+   ```sh
+   auth_server_url=$(kubectl get authserver insecure-auth-server \
+    -o jsonpath='{.status.issuerURI}')
+   ytt -v auth_server_url="$auth_server_url" \
+     -v auth_server_label_key=env \
+     -v auth_server_label_value=sandbox \
+     -v namespace=apps \
+     -f ./demos/easy-app-authentication-with-appsso/conf/accelerator-options.yaml |
+     tanzu accelerator generate angular-frontend --options -
+   ```
+
 5. Deploy the workload. Wait for a `Delivery` to be stamped out.
 
   ```sh
