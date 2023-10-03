@@ -48,3 +48,13 @@ metadata_store:
 grype:
   namespace:  #@ data.values.app_namespace
   targetImagePullSecret: tap-registry
+
+local_source_proxy:
+  repository: #@ "harbor.{}/tap-app-images/local-source".format(data.values.domain_name)
+  push_secret:
+   name: tap-registry
+   namespace: tap-install
+
+  pull_secret:
+   name: tap-registry
+   namespace: tap-install

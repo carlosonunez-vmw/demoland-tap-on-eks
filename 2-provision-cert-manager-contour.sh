@@ -77,7 +77,7 @@ annotate_cert_manager_with_irsa_ref() {
 # This function tells kapp to not reconcile this app so that this doesn't
 # happen.
 pause_cert_manager_kapp_reconciliation_so_annotations_remain() {
-  kubectl -n cert-manager patch sa cert-manager \
+  kubectl -n "$TANZU_PACKAGE_NAMESPACE" patch pkgi cert-manager \
     --type merge \
     --patch '{"spec":{"paused":true}}'
 }

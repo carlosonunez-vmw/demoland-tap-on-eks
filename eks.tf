@@ -34,7 +34,7 @@ module "eks" {
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.public_subnets
   eks_managed_node_group_defaults = {
-    instance_types = ["t3a.large"]
+    instance_types = ["t3a.xlarge"]
     capacity_type  = "SPOT"
     desired_size   = 3
     min_size       = 3
@@ -51,22 +51,12 @@ module "eks" {
       groups   = ["system:masters"]
     }
   ]
-  cluster_security_group_additional_rules = {
-    eks_control_plane_to_kapp_controller = {
-      description                = "Cluster API to kapp-controller"
-      protocol                   = "tcp"
-      from_port                  = 10350
-      to_port                    = 10350
-      source_node_security_group = true
-      type                       = "ingress"
-    }
-  }
   node_security_group_additional_rules = {
-    eks_control_plane_to_kapp_controller = {
-      description                   = "Cluster API to kapp-controller"
+    eks_control_plane_to_ephemeral_service_ports = {
+      description                   = "Cluster API to ephemeral ports on nodes"
       protocol                      = "tcp"
-      from_port                     = 10350
-      to_port                       = 10350
+      from_port                     = 1025
+      to_port                       = 65535
       source_cluster_security_group = true
       type                          = "ingress"
     }

@@ -1,0 +1,44 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: sso.apps.tanzu.vmware.com/v1alpha1
+kind: AuthServer
+metadata:
+  name: insecure-auth-server
+  namespace: default
+  labels:
+    name: insecure-auth-server
+    env: sandbox
+  annotations:
+    sso.apps.tanzu.vmware.com/allow-client-namespaces: "default,apps"
+    sso.apps.tanzu.vmware.com/allow-unsafe-issuer-uri: ""
+    sso.apps.tanzu.vmware.com/allow-unsafe-identity-provider: ""
+spec:
+  replicas: 1
+  tls:
+    deactivated: true
+  identityProviders:
+    - name: "internal"
+      internalUnsafe:
+        users:
+          - username: #@ data.values.auth_server_username
+            password: #@ data.values.auth_server_password
+            email: #@ "{}@example.com".format(data.values.auth_server_username)
+            emailVerified: true
+            roles:
+              - "user"
+  tokenSignature:
+    signAndVerifyKeyRef:
+      name: insecure-authserver-signing-key
+
+---
+apiVersion: secretgen.k14s.io/v1alpha1
+kind: RSAKey
+metadata:
+  name: insecure-authserver-signing-key
+  namespace: default
+spec:
+  secretTemplate:
+    type: Opaque
+    stringData:
+      key.pem: #@ data.values.auth_server_privkey
+      pub.pem: #@ data.values.auth_server_pubkey

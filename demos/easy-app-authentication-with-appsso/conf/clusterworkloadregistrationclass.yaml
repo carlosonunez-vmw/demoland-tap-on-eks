@@ -1,0 +1,15 @@
+---
+apiVersion: sso.apps.tanzu.vmware.com/v1alpha1
+kind: ClusterWorkloadRegistrationClass
+metadata:
+  name: demo-class-sbx
+spec:
+  description:
+    short: Insecure auth for the Sandbox environment
+  base:
+    spec:
+      authServerSelector:
+        matchLabels:
+          name: insecure-auth-server
+          env: sandbox
+

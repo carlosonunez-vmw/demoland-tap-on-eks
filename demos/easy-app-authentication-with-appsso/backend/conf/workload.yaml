@@ -1,0 +1,15 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: example-app-backend
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
+    app.kubernetes.io/part-of: example-app-backend
+    autoscaling.knative.dev/min-scale: "1"
+
+# This is meant to be deployed with local-path.
+# tanzu apps workload apply -f ./conf/workload.yaml --local-path .
+spec:
+  git:
+    repo: https://github.com/does/not-exist
+    path: .

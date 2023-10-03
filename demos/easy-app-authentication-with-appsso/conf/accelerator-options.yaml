@@ -1,0 +1,8 @@
+#@ load("@ytt:data", "data")
+artifactId: example-app
+backendService: #@ "example-app-backend.{}.svc.cluster.local".format(data.values.apps_ns)
+useSingleSignOn: true
+authority: #@ data.values.auth_server_url
+authorityLabelKey: #@ data.values.auth_server_label_key
+authorityLabelValue: #@ data.values.auth_server_label_value
+namespace: #@ data.values.apps_ns
