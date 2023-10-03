@@ -31,6 +31,24 @@ install_source_code_scan_and_test_supply_chain() {
 }
 
 
+patch_source_to_url_supply_chain_to_not_respond_to_tests() {
+  kubectl -n tap-install patch pkgi ootb-supply-chain-basic \
+    --type merge \
+    --patch '{"spec":{"paused":true}}' &&
+  kubectl patch csc source-to-url \
+    --type merge \
+    --patch '{
+  "spec": {
+    "selectorMatchExpressions": [
+      {
+        "key": "apps.tanzu.vmware.com/has-tests",
+        "operator": "DoesNotExist"
+      }
+    ]
+  }
+}'
+}
 
 install_tap
 install_source_code_scan_and_test_supply_chain
+patch_source_to_url_supply_chain_to_not_respond_to_tests
