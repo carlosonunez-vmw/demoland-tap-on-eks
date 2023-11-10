@@ -5,16 +5,8 @@ HARBOR_VERSION="$(get_helm_app_version 'harbor')" || exit 1
 TANZU_PACKAGE_NAMESPACE="$(get_namespace 'tanzu_package_repo')" || exit 1
 TAP_VERSION="$(get_common_version 'tap')" || exit 1
 install_harbor() {
-  echo "\
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: tanzu-system-registry
-" | kapp deploy -n "$TANZU_PACKAGE_NAMESPACE" -a harbor-ns -f - --yes || return 1
-  kapp deploy -a harbor -n "$TANZU_PACKAGE_NAMESPACE" \
-    --into-ns tanzu-system-registry \
-    --yes \
-    -f <(helm template harbor bitnami/harbor -n tanzu-system-registry --version "$2" -f - <<-EOF
+  set -x
+  yaml=$(cat <<-EOF
 adminPassword: $3
 externalURL: https://harbor.$1
 service:
@@ -27,7 +19,7 @@ exposureType: ingress
 persistence:
   persistentVolumeClaim:
     registry:
-      size: 50G
+      size: 49G
 ingress:
   core:
     tls: true
@@ -49,6 +41,16 @@ ingress:
     hostname: harbor-notary.$1
 EOF
 )
+  echo "\
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tanzu-system-registry
+" | kapp deploy -n "$TANZU_PACKAGE_NAMESPACE" -a harbor-ns -f - --yes || return 1
+  kapp deploy -a harbor -n "$TANZU_PACKAGE_NAMESPACE" \
+    --into-ns tanzu-system-registry \
+    --yes \
+    -f <(helm template harbor bitnami/harbor -n tanzu-system-registry --version "$2" -f - <<< "$yaml")
 }
 
 add_bitnami_helm_repo() {

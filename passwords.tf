@@ -1,5 +1,6 @@
 resource "random_string" "harbor_admin_password" {
-  length = 16
+  length  = 16
+  special = false
 }
 
 resource "random_string" "harbor_xsrf_key" {
