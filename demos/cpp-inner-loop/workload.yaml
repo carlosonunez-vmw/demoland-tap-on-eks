@@ -1,0 +1,16 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: c-demo-app
+  labels:
+    apps.tanzu.vmware.com/workload-type: server
+    apps.tanzu.vmware.com/has-tests: true
+    app.kubernetes.io/part-of: c-demo-app
+spec:
+  params:
+    - name: dockerfile
+      value: ./Dockerfile
+    - name: ports
+      value:
+        - containerPort: 1234
+          port: 1234
