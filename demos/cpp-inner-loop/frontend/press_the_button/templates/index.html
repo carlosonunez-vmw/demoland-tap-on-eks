@@ -1,0 +1,32 @@
+<!-- vi: set ft=htmldjango -->
+{% load static %}
+<html>
+  <head>
+    <title>{% block title %}{% endblock %}</title>
+  </head>
+  <script>
+  function runTheCheck() {
+    var resultDiv = document.getElementById("result");
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      var DONE = 4;
+      if (xhr.readyState == DONE) {
+        if (xhr.status == 200) {
+          resultDiv.innerHTML = "<p>Backend is up! Message: " + xhr.responseText;
+        } else {
+          resultDiv.innerHTML = "<p>Backend is not up.</p>";
+        }
+      }
+    };
+    xhr.open('get', '{{ backendURL }}');
+    xhr.send();
+  }
+  </script>
+  <body>
+    <div id="header">
+      <p>Click the button below to check if we can talk to the backend.</p>
+    </div>
+    <button onclick="runTheCheck()">Click me!</button>
+    <div id="result"></div>
+  </body>
+</html>

@@ -23,9 +23,7 @@ locally right from your IDE super easy.
   for containerized dev envs.
 - TAP's IDE plugins bring these features right to VSCode or IntelliJ.
 
-### Running the demo
-
-#### Beginning the Live Update
+### Preparing for the demo
 
 1. If needed, run `aws configure` and provide your AWS credentials when prompted.
 
@@ -49,7 +47,10 @@ locally right from your IDE super easy.
    context that's compatible with App Live Update.
 3. Run `8-set-up-dev-namespace.sh` at the root of this repo to create the dev namespace for our demo app
    along with its "testing" pipeline.
-3. Run `code $PWD/main.cpp`. This will open VSCode and bring you straight into
+
+### Running the demo
+
+3. Run `code $PWD/backend/main.c`. This will open VSCode and bring you straight into
    the star of this show. Open a terminal underneath the code; we'll use it
    later.
 4. Right click anywhere in the source code pane and select "App Live Update

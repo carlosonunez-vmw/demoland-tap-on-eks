@@ -1,7 +1,35 @@
 version: '3.7'
 services:
-  app:
+  backend:
     build:
-      context: .
+      context: ./backend
     ports:
       - "1234:1234"
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - 8080:80
+    volumes:
+      - database:/db
+    environment:
+      DATABASE_DIR: /db
+      SECRET_KEY: "super-insecure-secret-key-for-development-RxI,`Y&Xp4sc~U/%'C1K?(i?U0RwI#VY"
+      SERVER_HOST: unused.here
+      BACKEND_HOST: backend
+      BACKEND_PORT: 1234
+  migrate-frontend:
+    build:
+      context: ./frontend
+    environment:
+      DATABASE_DIR: /db
+      SECRET_KEY: "super-insecure-secret-key-for-development-RxI,`Y&Xp4sc~U/%'C1K?(i?U0RwI#VY"
+      SERVER_HOST: unused.here
+    volumes:
+      - database:/db
+    entrypoint:
+      - python
+      - manage.py
+      - migrate
+volumes:
+  database: {}

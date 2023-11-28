@@ -29,7 +29,7 @@ void signal_callback_handler(int signal)
 
 void signal_sigint_handler(int signal)
 {
-  puts("server: received interrupt; exiting.");
+  puts("server: received interrupt; exiting (connect again if server does not quit)");
   stop_server = 1;
 }
 
@@ -116,7 +116,7 @@ int main(void)
 
   // Listen for new connections and "hello world" them on
   // TCP ESTABLISHED.
-  printf("server: Listening...\n");
+  puts("server: Listening...\n");
   while(1) {
     if (stop_server == 1) {
       return 0;
@@ -145,6 +145,6 @@ int main(void)
   }
 
   // SIGINT/SIGKILL received; stop the server.
-  printf("server: received stop signal; terminating.\n");
+  puts("server: received stop signal; terminating.\n");
   return 0;
 }
