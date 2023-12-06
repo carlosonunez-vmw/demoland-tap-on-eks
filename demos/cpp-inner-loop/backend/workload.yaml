@@ -1,11 +1,11 @@
 apiVersion: carto.run/v1alpha1
 kind: Workload
 metadata:
-  name: c-demo-app
+  name: press-the-button-backend
   labels:
     apps.tanzu.vmware.com/workload-type: server
     apps.tanzu.vmware.com/has-tests: true
-    app.kubernetes.io/part-of: c-demo-app
+    app.kubernetes.io/part-of: press-the-button-backend
 spec:
   params:
     - name: dockerfile

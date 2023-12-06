@@ -25,6 +25,8 @@ locally right from your IDE super easy.
 
 ### Preparing for the demo
 
+#### Environment
+
 1. If needed, run `aws configure` and provide your AWS credentials when prompted.
 
 > ✅  You don't need to do this if you're already logged into the
@@ -48,7 +50,37 @@ locally right from your IDE super easy.
 3. Run `8-set-up-dev-namespace.sh` at the root of this repo to create the dev namespace for our demo app
    along with its "testing" pipeline.
 
+#### Frontend
+
+1. Deploy the frontend's config secrets:
+
+```sh
+ytt -v secretKey="$RANDOM_32_CHAR_STRING" \
+    -v serverHost="press-the-button.apps.$TAP_DOMAIN" \
+    -v backendHost=press-the-button-backend \
+    -v backendPort=1234 \
+    -f ./frontend/conf/secrets.yaml | kubectl apply -f -
+```
+
+2. Create the Postgres `ClassClaim`:
+
+```sh
+kubectl apply -f ./frontend/conf/database.yaml
+```
+
 ### Running the demo
+
+#### Demo Flow
+
+In this demo, you're going to:
+
+- Start an App Live Update session on a simple TCP server in C
+- Change the response from the server and view the change with App Live Update
+- Deploy the TCP server as a `server` Workload into TAP
+- Deploy a Django-powered frontend for the TCP server into TAP as a `web`
+  workload and view it in the browser
+
+#### Backend Live Update
 
 3. Run `code $PWD/backend/main.c`. This will open VSCode and bring you straight into
    the star of this show. Open a terminal underneath the code; we'll use it

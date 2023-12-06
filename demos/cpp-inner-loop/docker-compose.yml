@@ -6,30 +6,56 @@ services:
     ports:
       - "1234:1234"
   frontend:
+    depends_on:
+      database:
+        condition: service_healthy
     build:
       context: ./frontend
     ports:
-      - 8080:80
-    volumes:
-      - database:/db
+      - 8080:8080
     environment:
-      DATABASE_DIR: /db
       SECRET_KEY: "super-insecure-secret-key-for-development-RxI,`Y&Xp4sc~U/%'C1K?(i?U0RwI#VY"
       SERVER_HOST: unused.here
       BACKEND_HOST: backend
       BACKEND_PORT: 1234
+      DBHOST: database
+      DBUSER: pguser
+      DBPASS: supersecret
+      DBNAME: press_the_button_db
   migrate-frontend:
+    depends_on:
+      - database
     build:
       context: ./frontend
     environment:
       DATABASE_DIR: /db
       SECRET_KEY: "super-insecure-secret-key-for-development-RxI,`Y&Xp4sc~U/%'C1K?(i?U0RwI#VY"
       SERVER_HOST: unused.here
-    volumes:
-      - database:/db
+      DBHOST: database
+      DBUSER: pguser
+      DBPASS: supersecret
+      DBNAME: press_the_button_db
+      BACKEND_HOST: backend
+      BACKEND_PORT: 1234
     entrypoint:
       - python
       - manage.py
       - migrate
-volumes:
-  database: {}
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pguser
+      PGUSER: pguser
+      POSTGRES_PASSWORD: supersecret
+      PGPASS: supersecret
+      POSTGRES_DB: press_the_button_db
+    healthcheck:
+      test:
+        - CMD
+        - psql
+        - -h
+        - localhost
+        - -l
+      interval: 10s
+      timeout: 5s
+      retries: 10

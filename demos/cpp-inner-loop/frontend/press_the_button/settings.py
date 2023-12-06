@@ -13,7 +13,16 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
-for k in [ "SECRET_KEY", "DATABASE_DIR", "SERVER_HOST", "BACKEND_HOST", "BACKEND_PORT" ]:
+# Account for Service Bindings.
+if os.getenv("SERVICE_BINDING_ROOT"):
+    print("Configuring database environment from service bindings.")
+    database_bindings_path = os.environ["SERVICE_BINDING_ROOT"] + "/database"
+    os.environ["DBHOST"] = Path(database_bindings_path + "/host").read_text()
+    os.environ["DBNAME"] = Path(database_bindings_path + "/database").read_text()
+    os.environ["DBPASS"] = Path(database_bindings_path + "/password").read_text()
+    os.environ["DBUSER"] = Path(database_bindings_path + "/username").read_text()
+
+for k in [ "SECRET_KEY", "DBHOST", "DBNAME", "DBUSER", "DBPASS", "SERVER_HOST", "BACKEND_HOST", "BACKEND_PORT" ]:
     if not os.getenv(k):
         raise EnvironmentError(f"Please define {k} in the environment")
 
@@ -84,8 +93,14 @@ WSGI_APPLICATION = "press_the_button.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.environ["DATABASE_DIR"] + "/db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "HOST": os.environ['DBHOST'],
+        "NAME": os.environ['DBNAME'],
+        "USER": os.environ['DBUSER'],
+        "PASSWORD": os.environ['DBPASS'],
+        "OPTIONS": {
+            "connect_timeout": 30
+        }
     }
 }
 

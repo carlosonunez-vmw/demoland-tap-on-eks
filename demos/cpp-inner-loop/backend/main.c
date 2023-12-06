@@ -17,7 +17,7 @@
 
 int MAX_CONNECTIONS = 10; // Max connections we'll hold before refusing
 char * PORT = "1234";
-char * HELLO_MESSAGE = "Hello from the Tanzu Application Platform!";
+char * HELLO_MESSAGE = "Hi from the Tanzu Application Platform!";
 int stop_server = 0;
 
 void signal_callback_handler(int signal)

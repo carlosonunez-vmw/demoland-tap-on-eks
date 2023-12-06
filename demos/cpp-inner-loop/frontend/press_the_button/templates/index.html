@@ -2,7 +2,7 @@
 {% load static %}
 <html>
   <head>
-    <title>{% block title %}{% endblock %}</title>
+    <title>{{ title }}</title>
   </head>
   <script>
   function runTheCheck() {
@@ -20,7 +20,7 @@
     };
     xhr.open('get', '{{ backendURL }}');
     xhr.send();
-  }
+  };
   </script>
   <body>
     <div id="header">
