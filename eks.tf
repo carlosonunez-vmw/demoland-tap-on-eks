@@ -34,7 +34,7 @@ module "eks" {
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.public_subnets
   eks_managed_node_group_defaults = {
-    instance_types = ["t3a.xlarge"]
+    instance_types = ["t3a.2xlarge"]
     capacity_type  = "SPOT"
     desired_size   = 1
     min_size       = 1
