@@ -1,0 +1,16 @@
+---
+accelerator:
+  name: python-django-web-app
+  description: An accelerator for creating web apps in Python with Django.
+  tags:
+    - python
+    - django
+    - web
+    - tanzu
+  options:
+    - name: appName
+      inputType: text
+      description: The name of the app.
+    - name: indexTitle
+      inputType: text
+      description: The title of the index page.

@@ -1,0 +1,38 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: press-the-button-frontend
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
+    apps.tanzu.vmware.com/has-tests: true
+    app.kubernetes.io/part-of: press-the-button-frontend
+spec:
+  serviceClaims:
+    - name: database
+      ref:
+        apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+        kind: ClassClaim
+        name: frontend-db
+  env:
+    - name: DEBUG
+      value: "true"
+    - name: SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: press-the-button-config
+          key: secretKey
+    - name: SERVER_HOST
+      valueFrom:
+        secretKeyRef:
+          name: press-the-button-config
+          key: serverHost
+    - name: BACKEND_HOST
+      valueFrom:
+        secretKeyRef:
+          name: press-the-button-config
+          key: backendHost
+    - name: BACKEND_PORT
+      valueFrom:
+        secretKeyRef:
+          name: press-the-button-config
+          key: backendPort

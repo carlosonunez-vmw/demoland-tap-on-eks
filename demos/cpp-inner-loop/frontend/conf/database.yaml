@@ -1,0 +1,9 @@
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ClassClaim
+metadata:
+  name: frontend-db
+spec:
+  classRef:
+    name: postgresql-unmanaged
+  parameters:
+    storageGB: 2

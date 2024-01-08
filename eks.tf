@@ -34,14 +34,23 @@ module "eks" {
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.public_subnets
   eks_managed_node_group_defaults = {
-    instance_types = ["t3a.xlarge"]
+    instance_types = ["t3a.2xlarge"]
     capacity_type  = "SPOT"
-    desired_size   = 3
-    min_size       = 3
+    desired_size   = 1
+    min_size       = 1
   }
   eks_managed_node_groups = {
-    default = {
-      max_size = 8
+    first = {
+      subnets  = module.vpc.private_subnets[0]
+      max_size = 3
+    }
+    second = {
+      subnets  = module.vpc.private_subnets[1]
+      max_size = 3
+    }
+    third = {
+      subnets  = module.vpc.private_subnets[2]
+      max_size = 3
     }
   }
   aws_auth_users = [
