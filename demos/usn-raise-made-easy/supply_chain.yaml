@@ -1,0 +1,96 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterSupplyChain
+metadata:
+  name: raise-to-url
+spec:
+  selector:
+    frameworks.doncio.navy.mil/requires-raise: "true"
+  resources:
+    # GATE 1: must provide SAST for available source code
+    - name: SAST
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: raise-sast-template
+    # GATE 2: Must provide SBOM.
+    - name: SBOM
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: raise-image-scanner-template
+      configs:
+        - name: config
+          resource: sast-config
+    # GATE 3: Must provide secrets detection.
+    # This can be done with a Tekton pipeline that runs yelp/detect-secrets.
+    # Might need to make its Runnable have a app.kubernetes.io/component: test
+    # label so that we can see pipeline results in TAP.
+    # Alternatively we could just create a Pipeline within the AppNS that
+    # does this and have this supply chain look for it explicitly.
+    - name: detect-secrets
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: raise-secrets-detection-template
+      configs:
+        - name: config
+          resource: sbom-config
+    # GATE 4: Must provide Container Security Scanning.
+    # This can be accomplished with TAP's built-in Grype.
+    - name: scan-container
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: raise-image-scanner-template
+      configs:
+        - name: config
+          resource: secrets-config
+    # GATE 5: Must provide DAST.
+    # This can be accomplished with OWASP ZAP.
+    - name: DAST
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: raise-dast-template
+      configs:
+        - name: config
+          resource: scan-container-config
+    # GATE 6: Must allow RPOC ISSM to review.
+    # This is a manual approval, i.e. someone needs to click a button.
+    # Cartographer/TAP doesn't seem to support this. One way around it would be to
+    # add a ClusterSource resource that uses a Tekton Pipeline which waits for approval to come from
+    # somewhere else (like ServiceNow).
+    - name: issm-review
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: raise-issm-review-template
+      configs:
+        - name: config
+          resource: dast-config
+    # GATE 7: Have ISSM sign the container image
+    # Build Service signs all images, but if a signature from an ISSM's public key
+    # is required, "docker trust" can be used here.
+    # The ISSM's public key would need to be looked up somehow, so assuming that ISSMs
+    # use individual keys and are assigned semi-randomly, a resource could be added to the start
+    # of the supply chain that waits for someone to "commit" information about the ISSM and, once
+    # obtained, pass that down to this resource.
+    - name: issm-sign
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: raise-issm-sign-template
+      configs:
+        - name: config
+          resource: issm-review-config
+    # GATE 8: Container image must be stored in a repository. An Image Template can be used for
+    # this.
+    - name: push-signed-image
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: raise-image-push-template
+      configs:
+        - name: config
+          resource: issm-sign-config
+    # GATE 9: Deliver the application. Everything from here is basically the same as 
+    # the source-test-scan-to-url CSC.
+    - name: deliver-the-app
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: raise-deliver-app-template
+      configs:
+        - name: config
+          resource: issm-sign-config

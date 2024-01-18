@@ -1,0 +1,16 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterConfigTemplate
+metadata:
+  name: raise-sast-template
+spec:
+  healthRule:
+    alwaysHealthy: {}
+  lifecycle: tekton
+  configPath: .status.template
+  ytt: |
+    ---
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: #@ data.values.workload.metadata.name + "-sast-cm"
+    data: {}

@@ -1,0 +1,20 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterTemplate
+metadata:
+  name: raise-issm-sign-template
+spec:
+  healthRule:
+    alwaysHealthy: {}
+  lifecycle: tekton
+  ytt: |
+    ---
+    #@ load("@ytt:data", "data")
+    apiVersion: tekton.dev/v1beta1
+    kind: TaskRun
+    metadata:
+      generateName: #@ data.values.workload.metadata.name + "-noop-run-"
+    spec:
+      taskRef:
+        name: do-nothing
+        kind: ClusterTask
+

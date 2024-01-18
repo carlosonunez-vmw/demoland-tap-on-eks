@@ -1,0 +1,16 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterTemplate
+metadata:
+  name: raise-deliver-app-template
+spec:
+  healthRule:
+    alwaysHealthy: {}
+  lifecycle: tekton
+  configPath: .status.template
+  ytt: |
+    ---
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: #@ data.values.workload.metadata.name + "-deliver-cm"
+    data: {}
