@@ -9,6 +9,7 @@ spec:
   configPath: .status.template
   ytt: |
     ---
+    #@ load("@ytt:data", "data")
     apiVersion: v1
     kind: ConfigMap
     metadata:

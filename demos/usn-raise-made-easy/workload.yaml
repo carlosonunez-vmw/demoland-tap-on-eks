@@ -8,4 +8,8 @@ metadata:
     frameworks.doncio.navy.mil/requires-raise: "true"
     apps.tanzu.vmware.com/has-tests: 'true'
 spec:
-  image: bash:5
+  source:
+    git:
+      url: https://github.com/carlosonunez-vmw/example-java-app
+      ref:
+        branch: main

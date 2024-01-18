@@ -9,8 +9,11 @@ spec:
   configPath: .status.template
   ytt: |
     ---
+    #@ load("@ytt:data", "data")
     apiVersion: v1
     kind: ConfigMap
     metadata:
+      labels:
+        frameworks.doncio.navy.mil/requires-raise: "true"
       name: #@ data.values.workload.metadata.name + "-image-scanner-cm"
     data: {}
