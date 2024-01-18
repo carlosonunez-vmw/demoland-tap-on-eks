@@ -28,7 +28,7 @@ spec:
     - name: detect-secrets
       templateRef:
         kind: ClusterConfigTemplate
-        name: raise-secrets-detection-template
+        name: raise-secrets-template
       configs:
         - name: config
           resource: sbom-config
@@ -81,7 +81,7 @@ spec:
     - name: push-signed-image
       templateRef:
         kind: ClusterConfigTemplate
-        name: raise-image-push-template
+        name: raise-push-template
       configs:
         - name: config
           resource: issm-sign-config

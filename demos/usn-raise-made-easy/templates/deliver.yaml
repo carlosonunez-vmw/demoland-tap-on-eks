@@ -1,7 +1,7 @@
 apiVersion: carto.run/v1alpha1
-kind: ClusterTemplate
+kind: ClusterConfigTemplate
 metadata:
-  name: raise-deliver-app-template
+  name: raise-deliver-template
 spec:
   healthRule:
     alwaysHealthy: {}

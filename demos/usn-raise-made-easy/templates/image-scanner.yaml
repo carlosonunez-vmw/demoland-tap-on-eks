@@ -1,5 +1,5 @@
 apiVersion: carto.run/v1alpha1
-kind: ClusterTemplate
+kind: ClusterConfigTemplate
 metadata:
   name: raise-image-scanner-template
 spec:
