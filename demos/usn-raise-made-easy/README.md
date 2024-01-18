@@ -32,11 +32,34 @@ Learn more about the RAISE framework
 
 ### Instructions
 
-WIP.
+1. Apply the `ClusterTemplate`s
+
+```sh
+kubectl apply -f ./demos/usn-raise-made-easy/templates/
+```
+
+2. Apply the `SupplyChain`:
+
+```sh
+kubectl apply -f ./demos/usn-raise-made-easy/supply_chain.yaml
+```
+
+3. Apply the workload:
+
+```sh
+kubectl apply -f ./demos/usn-raise-made-easy/supply_chain.yaml
+```
+
+4. Visit the GUI and watch it fly!
 
 ## Things To Point Out
 
-WIP.
+### Clean SBOMs with image scanning for free
+
+The `SBOM` stage retrieves the SBOM of the image that TAP generated for the
+example Java app in our workload...with some image scanning thrown in for free.
+While this is accomplished with Trivy, you can change the image scanning tool as
+needed.
 
 ## Troubleshooting
 
