@@ -1,12 +1,12 @@
 apiVersion: carto.run/v1alpha1
-kind: ClusterConfigTemplate
+kind: ClusterImageTemplate
 metadata:
   name: raise-dast-template
 spec:
   healthRule:
     alwaysHealthy: {}
-  lifecycle: tekton
-  configPath: .status.template
+  lifecycle: mutable
+  imagePath: .data.image
   ytt: |
     ---
     #@ load("@ytt:data", "data")
@@ -14,4 +14,5 @@ spec:
     kind: ConfigMap
     metadata:
       name: #@ data.values.workload.metadata.name + "-dast-cm"
-    data: {}
+    data:
+      image: #@ data.values.image

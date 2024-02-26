@@ -47,7 +47,7 @@ kubectl apply -f ./demos/usn-raise-made-easy/supply_chain.yaml
 3. Apply the workload:
 
 ```sh
-kubectl apply -f ./demos/usn-raise-made-easy/supply_chain.yaml
+kubectl apply -f ./demos/usn-raise-made-easy/workload.yaml
 ```
 
 4. Visit the GUI and watch it fly!

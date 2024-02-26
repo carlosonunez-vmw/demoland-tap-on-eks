@@ -1,15 +1,11 @@
 apiVersion: carto.run/v1alpha1
 kind: ClusterSupplyChain
 metadata:
-  name: raise-to-url
+  name: raise-vendor-images
 spec:
   selector:
     frameworks.doncio.navy.mil/requires-raise: "true"
-  selectorMatchExpressions:
-    - key: apps.tanzu.vmware.com/workload-type
-      operator: NotIn
-      values:
-        - vendor-image
+    apps.tanzu.vmware.com/workload-type: vendor-image
   resources:
     # GATE 0: Grab source and build image from it.
     - name: source-provider
@@ -146,74 +142,3 @@ spec:
       images:
         - name: image
           resource: issm-sign
-    - name: config-provider
-      templateRef:
-        kind: ClusterConfigTemplate
-        name: convention-template
-      images:
-        - name: image
-          resource: push-signed-image
-      params:
-      - default: default
-        name: serviceAccount
-    - configs:
-      - name: config
-        resource: config-provider
-      name: app-config
-      templateRef:
-        kind: ClusterConfigTemplate
-        options:
-        - name: config-template
-          selector:
-            matchLabels:
-              apps.tanzu.vmware.com/workload-type: web
-              apps.tanzu.vmware.com/workload-type: custom
-        - name: server-template
-          selector:
-            matchLabels:
-              apps.tanzu.vmware.com/workload-type: server
-        - name: worker-template
-          selector:
-            matchLabels:
-              apps.tanzu.vmware.com/workload-type: worker
-    - configs:
-      - name: app_def
-        resource: app-config
-      name: service-bindings
-      templateRef:
-        kind: ClusterConfigTemplate
-        name: service-bindings
-    - configs:
-      - name: app_def
-        resource: service-bindings
-      name: api-descriptors
-      templateRef:
-        kind: ClusterConfigTemplate
-        name: api-descriptors
-    - configs:
-      - name: config
-        resource: api-descriptors
-      name: config-writer
-      params:
-      - default: default
-        name: serviceAccount
-      - name: registry
-        value:
-          ca_cert_data: ""
-          repository: tap-1.6.1/workloads
-          server: harbor.platform.sbx.tanzufederal.com
-      templateRef:
-        kind: ClusterTemplate
-        name: config-writer-template
-    - name: deliverable
-      params:
-      - name: registry
-        value:
-          ca_cert_data: ""
-          repository: tap-1.6.1/workloads
-          server: harbor.platform.sbx.tanzufederal.com
-      - default: go-git
-        name: gitImplementation
-      templateRef:
-        kind: ClusterTemplate
-        name: deliverable-template
