@@ -11,7 +11,7 @@ spec:
       values:
         - vendor-image
   resources:
-    # GATE 0: Grab source and build image from it.
+    # GATE 0a: Grab our source code.
     - name: source-provider
       params:
       - default: default
@@ -21,6 +21,22 @@ spec:
       templateRef:
         kind: ClusterSourceTemplate
         name: source-template
+    # GATE 1a: must provide SAST for available source code
+    # (this has to be done before building an image due to supply chain design)
+    - name: SAST
+      sources:
+        - name: source
+          resource: source-provider
+      templateRef:
+        kind: ClusterSourceTemplate
+        name: raise-sast-template
+      params:
+        - name: scanning_source_template
+          value: public-source-scan-template
+        - name: scanning_source_policy
+          value: ""
+    # GATE 1b: Create a container image from this app's source code
+    # now that the source code has undergone SAST
     - name: image-provider
       params:
       - default: default
@@ -40,7 +56,7 @@ spec:
         name: docker_build_extra_args
       sources:
       - name: source
-        resource: source-provider
+        resource: SAST
       templateRef:
         kind: ClusterImageTemplate
         options:
@@ -72,14 +88,6 @@ spec:
       templateRef:
         kind: ClusterImageTemplate
         name: image-scanner-template
-    # GATE 1: must provide SAST for available source code
-    - name: SAST
-      templateRef:
-        kind: ClusterImageTemplate
-        name: raise-sast-template
-      images:
-        - name: image
-          resource: SBOM
     # GATE 3: Must provide secrets detection.
     # This can be done with a Tekton pipeline that runs yelp/detect-secrets.
     # Might need to make its Runnable have a app.kubernetes.io/component: test
@@ -92,7 +100,7 @@ spec:
         name: raise-secrets-template
       images:
         - name: image
-          resource: SAST
+          resource: SBOM
     # GATE 4: Must provide Container Security Scanning.
     # This can be accomplished with TAP's built-in Grype.
     - name: scan-container

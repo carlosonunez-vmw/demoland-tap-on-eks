@@ -10,6 +10,6 @@ metadata:
 spec:
   source:
     git:
-      url: https://github.com/carlosonunez-vmw/example-java-app
+      url: https://github.com/carlosonunez-vmw/example-java-app.git
       ref:
         branch: main
