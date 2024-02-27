@@ -12,6 +12,7 @@ spec:
         - vendor-image
   resources:
     # GATE 0a: Grab our source code.
+    # This has to be first so that the Supply Chain can trigger on new commits.
     - name: source-provider
       params:
       - default: default
@@ -32,9 +33,18 @@ spec:
         name: raise-sast-template
       params:
         - name: scanning_source_template
-          value: public-source-scan-template
+          value: trivy-blob-source-scan-template
         - name: scanning_source_policy
-          value: ""
+          value: trivy-scan-policy
+    # GATE 1b: Run application tests. (This isn't actually specified in RAISE, but
+    # obviously it's a good idea!)
+    - name: test-source
+      sources:
+        - name: source
+          resource: SAST
+      templateRef:
+        kind: ClusterSourceTemplate
+        name: testing-pipeline
     # GATE 1b: Create a container image from this app's source code
     # now that the source code has undergone SAST
     - name: image-provider
@@ -56,7 +66,7 @@ spec:
         name: docker_build_extra_args
       sources:
       - name: source
-        resource: SAST
+        resource: test-source
       templateRef:
         kind: ClusterImageTemplate
         options:
@@ -71,7 +81,8 @@ spec:
             - key: spec.params[?(@.name=="dockerfile")]
               operator: Exists
     # GATE 2: Must provide SBOM. Also includes image scanning.
-    - name: SBOM
+    # GATE 4: Must scan the container. Superceded by container image scanning.
+    - name: scan-and-SBOM-image
       images:
       - name: image
         resource: image-provider
@@ -100,25 +111,7 @@ spec:
         name: raise-secrets-template
       images:
         - name: image
-          resource: SBOM
-    # GATE 4: Must provide Container Security Scanning.
-    # This can be accomplished with TAP's built-in Grype.
-    - name: scan-container
-      templateRef:
-        kind: ClusterImageTemplate
-        name: raise-image-scanner-template
-      images:
-        - name: image
-          resource: detect-secrets
-    # GATE 5: Must provide DAST.
-    # This can be accomplished with OWASP ZAP.
-    - name: DAST
-      templateRef:
-        kind: ClusterImageTemplate
-        name: raise-dast-template
-      images:
-        - name: image
-          resource: scan-container
+          resource: scan-and-SBOM-image
     # GATE 6: Must allow RPOC ISSM to review.
     # This is a manual approval, i.e. someone needs to click a button.
     # Cartographer/TAP doesn't seem to support this. One way around it would be to
@@ -130,7 +123,7 @@ spec:
         name: raise-issm-review-template
       images:
         - name: image
-          resource: DAST
+          resource: detect-secrets
     # GATE 7: Have ISSM sign the container image
     # Build Service signs all images, but if a signature from an ISSM's public key
     # is required, "docker trust" can be used here.
@@ -154,6 +147,8 @@ spec:
       images:
         - name: image
           resource: issm-sign
+    # Everything after this point is basically the delivery preparation tasks from
+    # the source-test-scan-to-url supply chain.
     - name: config-provider
       templateRef:
         kind: ClusterConfigTemplate
@@ -213,6 +208,31 @@ spec:
       templateRef:
         kind: ClusterTemplate
         name: config-writer-template
+    # GATE 5: Must provide DAST
+    # 
+    # How this works:
+    #
+    # - A `ClusterDelivery` called `secure-delivery-dast` responds to this
+    #   `Deliverable` through the selector `frameworks.doncio.navy.mil/requires-raise: "true"`.
+    #
+    #   This `ClusterDelivery` is the same as `delivery-basic` with the additional step below.
+    # - The `secure-delivery-dast` `ClusterDelivery` creates a Tekton ClusterTask `Runnable`
+    #   via the `app-dast` `ClusterDeploymentTemplate`
+    # - The `ClusterTask` runs OWASP ZAP against the URL that was deployed by
+    #   `secure-delivery-dast`.
+    #
+    # Design considerations:
+    #
+    # - **Isolation**: Since you are using this Deliverable to scan a website that is
+    #   deployed and exposed to a real environment, you'll probably want to run this in a cluster
+    #   that does not have Internet access.
+    #
+    #   This means that you'll need a `run` cluster that waits for new images that are signed off
+    #   from this supply chain and deploys them to your desired target environment.
+    #
+    #   This can be accomplished either with GitOps (see the `commit-and-pr` ClusterTask) or
+    #   with a `scanning-image-scan-to-url` Supply Chain that waits on an image to be
+    #   `PUT` into an image registry.
     - name: deliverable
       params:
       - name: registry

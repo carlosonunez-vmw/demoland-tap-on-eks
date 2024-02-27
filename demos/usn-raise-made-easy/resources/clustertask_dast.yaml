@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: perform-dast-scan-owasp-zap
+spec:
+  description: |-
+    Performs a DAST scan using the containerized version of OWASP's ZAP.
+    See https://www.zaproxy.org/docs/docker/about/ to learn more about ZAP in Docker.
+  params:
+  - name: url
+    description: The URL to have ZAP target.
+    type: string
+  results:
+  - name: scan-log
+    description: The log that ZAP produced during the scan.
+  - name: scan-result
+    description: The result of the ZAP scan.
+    type: string
+  steps:
+  - image: owasp/zap2docker-stable
+    name: do-the-scan
+    script: |
+      result_code_message_map=$(cat <<-EOF
+      0:clean
+      1:failure-detected
+      2:clean-with-warnings
+      3:general-error
+      EOF
+      )
+      zap-baseline.py -t $(params.url) | tee $(results.scan-log.path)
+      result=$?
+      echo "$result_code_message_map" |
+        grep -E "^$result" |
+        cut -f2 -d ':' > $(results.scan-result.path)
+      if test "$result" -eq 1 | test "$result" -eq 3
+      then exit 1
+      fi

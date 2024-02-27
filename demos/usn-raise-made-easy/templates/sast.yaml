@@ -18,8 +18,8 @@ spec:
         - status: "False"
           type: Succeeded
   lifecycle: mutable
-  urlPath: .status.artifact.git.url
-  revisionPath: .status.artifact.git.revision
+  urlPath: .status.artifact.blob.url
+  revisionPath: .status.artifact.blob.revision
   ytt: |
     ---
     #@ load("@ytt:data", "data")
@@ -45,15 +45,6 @@ spec:
       #@ if data.values.params.scanning_source_policy != None and len(data.values.params.scanning_source_policy) > 0:
       scanPolicy: #@ data.values.params.scanning_source_policy
       #@ end
-      git:
-        #! HACK: `gitlet` requires that all repos end in `.git`:
-        #@ if not regexp.match("\.git$", data.values.workload.spec.source.git.url):
-        url: #@ data.values.workload.spec.source.git.url + ".git"
-        #@ else:
-        url: #@ data.values.workload.spec.source.git.url
-        #@ end
-        #@ if data.values.workload.spec.source.git.ref.branch != None and len(data.values.workload.spec.source.git.ref.branch) > 0:
-        revision: #@ data.values.workload.spec.source.git.ref.branch
-        #@ elif data.values.workload.spec.source.git.ref.commit != None and len(data.values.workload.spec.source.git.ref.commit) > 0:
-        revision: #@ data.values.workload.spec.source.git.ref.commit
-        #@ end
+      blob:
+        revision: #@ data.values.source.revision
+        url: #@ data.values.source.url

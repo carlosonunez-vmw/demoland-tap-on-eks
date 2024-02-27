@@ -1,0 +1,36 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterDelivery
+metadata:
+  name: secure-delivery-dast
+spec:
+  resources:
+  - name: source-provider
+    params:
+    - default: default
+      name: serviceAccount
+    - default: go-git
+      name: gitImplementation
+    templateRef:
+      kind: ClusterSourceTemplate
+      name: delivery-source-template
+  - deployment:
+      resource: source-provider
+    name: deployer
+    params:
+    - default: default
+      name: serviceAccount
+    templateRef:
+      kind: ClusterDeploymentTemplate
+      name: app-deploy
+  - deployment:
+      resource: source-provider
+    name: dast-scanner
+    params:
+    - default: default
+      name: serviceAccount
+    templateRef:
+      kind: ClusterDeploymentTemplate
+      name: app-dast
+  selector:
+    app.tanzu.vmware.com/deliverable-type: custom
+    frameworks.doncio.navy.mil/requires-raise: "true"
