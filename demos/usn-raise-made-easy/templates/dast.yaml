@@ -1,18 +1,38 @@
 apiVersion: carto.run/v1alpha1
-kind: ClusterImageTemplate
+kind: ClusterTemplate
 metadata:
-  name: raise-dast-template
+  name: raise-dast-scan-template
 spec:
-  healthRule:
-    alwaysHealthy: {}
   lifecycle: mutable
-  imagePath: .data.image
+  params:
+  - default: {}
+    name: registry
   ytt: |
-    ---
     #@ load("@ytt:data", "data")
-    apiVersion: v1
-    kind: ConfigMap
+    #@ load("@ytt:assert", "assert")
+
+    #@ def merge_labels(fixed_values):
+    #@   labels = {}
+    #@   if hasattr(data.values.deliverable.metadata, "labels"):
+    #@     labels.update(data.values.deliverable.metadata.labels)
+    #@   end
+    #@   labels.update(fixed_values)
+    #@   return labels
+    #@ end
+    ---
+    apiVersion: carto.run/v1alpha1
+    kind: Runnable
     metadata:
-      name: #@ data.values.workload.metadata.name + "-dast-cm"
-    data:
-      image: #@ data.values.image
+      name: #@ data.values.deliverable.metadata.name + "-dast-scan"
+      labels: #@ merge_labels({ "app.kubernetes.io/component": "deploy" })
+    spec:
+      runTemplateRef:
+        name: tekton-taskrun
+      inputs:
+        serviceAccount: #@ data.values.params.serviceAccount
+        taskRef:
+          kind: ClusterTask
+          name: perform-dast-scan-owasp-zap
+        params:
+          - name: url
+            value: #@ "https://{}.{}.svc.cluster.local".format(data.values.workload.metadata.name, data.values.workload.metadata.namespace)

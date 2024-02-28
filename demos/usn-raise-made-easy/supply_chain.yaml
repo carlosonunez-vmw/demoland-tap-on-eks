@@ -208,6 +208,13 @@ spec:
       templateRef:
         kind: ClusterTemplate
         name: config-writer-template
+    - name: dast-scan
+      params:
+      - default: default
+        name: serviceAccount
+      templateRef:
+        kind: ClusterTemplate
+        name: raise-dast-scan-template
     # GATE 5: Must provide DAST
     # 
     # How this works:
