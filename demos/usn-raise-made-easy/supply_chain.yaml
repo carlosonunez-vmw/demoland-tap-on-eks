@@ -206,8 +206,9 @@ spec:
           repository: tap-1.6.1/workloads
           server: harbor.platform.sbx.tanzufederal.com
       templateRef:
-        kind: ClusterTemplate
-        name: config-writer-template
+        kind: ClusterConfigTemplate
+        name: config-writer-template-with-postflight
+    # GATE 5: Must provide DAST
     - name: dast-scan
       params:
       - default: default
@@ -215,31 +216,9 @@ spec:
       templateRef:
         kind: ClusterTemplate
         name: raise-dast-scan-template
-    # GATE 5: Must provide DAST
-    # 
-    # How this works:
-    #
-    # - A `ClusterDelivery` called `secure-delivery-dast` responds to this
-    #   `Deliverable` through the selector `frameworks.doncio.navy.mil/requires-raise: "true"`.
-    #
-    #   This `ClusterDelivery` is the same as `delivery-basic` with the additional step below.
-    # - The `secure-delivery-dast` `ClusterDelivery` creates a Tekton ClusterTask `Runnable`
-    #   via the `app-dast` `ClusterDeploymentTemplate`
-    # - The `ClusterTask` runs OWASP ZAP against the URL that was deployed by
-    #   `secure-delivery-dast`.
-    #
-    # Design considerations:
-    #
-    # - **Isolation**: Since you are using this Deliverable to scan a website that is
-    #   deployed and exposed to a real environment, you'll probably want to run this in a cluster
-    #   that does not have Internet access.
-    #
-    #   This means that you'll need a `run` cluster that waits for new images that are signed off
-    #   from this supply chain and deploys them to your desired target environment.
-    #
-    #   This can be accomplished either with GitOps (see the `commit-and-pr` ClusterTask) or
-    #   with a `scanning-image-scan-to-url` Supply Chain that waits on an image to be
-    #   `PUT` into an image registry.
+      configs:
+        - name: config
+          resource: config-writer
     - name: deliverable
       params:
       - name: registry

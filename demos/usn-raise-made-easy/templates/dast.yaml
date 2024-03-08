@@ -3,6 +3,8 @@ kind: ClusterTemplate
 metadata:
   name: raise-dast-scan-template
 spec:
+  healthRule:
+    singleConditionType: Ready
   lifecycle: mutable
   params:
   - default: {}
