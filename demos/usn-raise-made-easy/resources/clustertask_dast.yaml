@@ -20,6 +20,8 @@ spec:
   - image: owasp/zap2docker-stable
     name: do-the-scan
     script: |
+      #!/usr/bin/env bash
+      set -xo pipefail
       result_code_message_map=$(cat <<-EOF
       0:clean
       1:failure-detected
@@ -28,10 +30,11 @@ spec:
       EOF
       )
       zap-baseline.py -t $(params.url) | tee $(results.scan-log.path)
-      result=$?
+      result="$?"
       echo "$result_code_message_map" |
         grep -E "^$result" |
         cut -f2 -d ':' > $(results.scan-result.path)
       if test "$result" -eq 1 | test "$result" -eq 3
       then exit 1
       fi
+      exit "$result"
