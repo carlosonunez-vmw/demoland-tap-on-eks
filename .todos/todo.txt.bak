@@ -1,2 +1,2 @@
-x 2023-09-11 Define a version file for TAP, and point scripts to it.
 install CLI later after standing up Harbor
+BOOKMARK: evaluate tag $: jsonpath returned empty list:

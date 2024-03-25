@@ -16,6 +16,7 @@ config:
             tanzu_data_dir: $(dirname "$0")/.data/tanzu
         repositories:
             tap_packages: registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:1.6.1
+            trivy_tap_scanner: projects.registry.vmware.com/tanzu_practice/tap-scanners-package/trivy-repo-scanning-bundle:0.1.4-alpha.6
     terraform:
         aws:
             bucket:
@@ -53,6 +54,7 @@ versions_unencrypted:
         # tap: The version of TAP to use.
         tap: 1.6.1
         scanning-testing-pipeline: 0.13.6
+        trivy: 0.1.7-alpha.1
     helm_app:
         external-dns: 0.13.4
         harbor: 2.6.1
@@ -69,8 +71,8 @@ sops:
     azure_kv: []
     hc_vault: []
     age: []
-    lastmodified: "2023-09-19T15:45:46Z"
-    mac: ENC[AES256_GCM,data:ClIkpmmm1kLrcNvzHX5LgxdQ1Jf6Fuk/1jM4FcAYtNwi1Dod+DkN2CSeFKEf5HNr4UK82JsLsGMpkpiY/QFZI++P/jdC1Kk4cYTMgZKdNVdvCG7UK1wMNUpDxoI9CqiQK2JqmLcIWuMPNtlavZEwJwwMrcPyktW913Tg8Ir++vk=,iv:sOlNlYz2+Zo/DkZG1cn2zNBe5PopEfHMkuk4EF3CcGA=,tag:SrihSh/oIzlD65fXJQLQ5A==,type:str]
+    lastmodified: "2024-02-26T22:29:53Z"
+    mac: ENC[AES256_GCM,data:JGozRlhIP3gYoYoqEr2PB9qtqBCU2czO4b/qEINH+3ShYbjWP6p01QEclADI3gtYbeWwvo55lDv/06NDgWG78LcQJoVDzAVSM8jFh3iogDxMH5d/i/X10opFLHY4UXwLI5eRppeCwhIxUDJ74tJd53FlPQGET7sBZYkJuTWfhXE=,iv:fZ/mc754ENx68YZxCKik5Btjlp+ShWBniJnn2+V5iZ0=,tag:fZeURZTmH4vfOA5YYtH+bQ==,type:str]
     pgp:
         - created_at: "2023-07-31T15:45:18Z"
           enc: |

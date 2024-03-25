@@ -1,0 +1,50 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterSourceTemplate
+metadata:
+  name: raise-sast-template
+spec:
+  healthRule:
+    multiMatch:
+      healthy:
+        matchConditions:
+          - status: "True"
+            type: Succeeded
+      unhealthy:
+        matchConditions:
+        - status: "False"
+          type: PolicySucceeded
+        - status: Unknown
+          type: PolicySucceeded
+        - status: "False"
+          type: Succeeded
+  lifecycle: mutable
+  urlPath: .status.artifact.blob.url
+  revisionPath: .status.artifact.blob.revision
+  ytt: |
+    ---
+    #@ load("@ytt:data", "data")
+    #@ load("@ytt:regexp", "regexp")
+
+    #@ def merge_labels(fixed_values):
+    #@   labels = {}
+    #@   if hasattr(data.values.workload.metadata, "labels"):
+    #@     labels.update(data.values.workload.metadata.labels)
+    #@   end
+    #@   labels.update(fixed_values)
+    #@   return labels
+    #@ end
+
+    ---
+    apiVersion: scanning.apps.tanzu.vmware.com/v1beta1
+    kind: SourceScan
+    metadata:
+      name: #@ data.values.workload.metadata.name
+      labels: #@ merge_labels({ "app.kubernetes.io/component": "image-scan" })
+    spec:
+      scanTemplate: #@ data.values.params.scanning_source_template
+      #@ if data.values.params.scanning_source_policy != None and len(data.values.params.scanning_source_policy) > 0:
+      scanPolicy: #@ data.values.params.scanning_source_policy
+      #@ end
+      blob:
+        revision: #@ data.values.source.revision
+        url: #@ data.values.source.url

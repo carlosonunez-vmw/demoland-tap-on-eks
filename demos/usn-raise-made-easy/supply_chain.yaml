@@ -1,0 +1,233 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterSupplyChain
+metadata:
+  name: raise-to-url
+spec:
+  selector:
+    frameworks.doncio.navy.mil/requires-raise: "true"
+  selectorMatchExpressions:
+    - key: apps.tanzu.vmware.com/workload-type
+      operator: NotIn
+      values:
+        - vendor-image
+  resources:
+    # GATE 0a: Grab our source code.
+    # This has to be first so that the Supply Chain can trigger on new commits.
+    - name: source-provider
+      params:
+      - default: default
+        name: serviceAccount
+      - default: go-git
+        name: gitImplementation
+      templateRef:
+        kind: ClusterSourceTemplate
+        name: source-template
+    # GATE 1a: must provide SAST for available source code
+    # (this has to be done before building an image due to supply chain design)
+    - name: SAST
+      sources:
+        - name: source
+          resource: source-provider
+      templateRef:
+        kind: ClusterSourceTemplate
+        name: raise-sast-template
+      params:
+        - name: scanning_source_template
+          value: trivy-blob-source-scan-template
+        - name: scanning_source_policy
+          value: trivy-scan-policy
+    # GATE 1b: Run application tests. (This isn't actually specified in RAISE, but
+    # obviously it's a good idea!)
+    - name: test-source
+      sources:
+        - name: source
+          resource: SAST
+      templateRef:
+        kind: ClusterSourceTemplate
+        name: testing-pipeline
+    # GATE 1b: Create a container image from this app's source code
+    # now that the source code has undergone SAST
+    - name: image-provider
+      params:
+      - default: default
+        name: serviceAccount
+      - name: registry
+        value:
+          ca_cert_data: ""
+          repository: tap-1.6.1/workloads
+          server: harbor.platform.sbx.tanzufederal.com
+      - default: default
+        name: clusterBuilder
+      - default: ./Dockerfile
+        name: dockerfile
+      - default: ./
+        name: docker_build_context
+      - default: []
+        name: docker_build_extra_args
+      sources:
+      - name: source
+        resource: test-source
+      templateRef:
+        kind: ClusterImageTemplate
+        options:
+        - name: kpack-template
+          selector:
+            matchFields:
+            - key: spec.params[?(@.name=="dockerfile")]
+              operator: DoesNotExist
+        - name: kaniko-template
+          selector:
+            matchFields:
+            - key: spec.params[?(@.name=="dockerfile")]
+              operator: Exists
+    # GATE 2: Must provide SBOM. Also includes image scanning.
+    # GATE 4: Must scan the container. Superceded by container image scanning.
+    - name: scan-and-SBOM-image
+      images:
+      - name: image
+        resource: image-provider
+      params:
+      - default: scan-policy
+        name: scanning_image_policy
+      - default: private-image-scan-template
+        name: scanning_image_template
+      - name: registry
+        value:
+          ca_cert_data: ""
+          repository: tap-1.6.1/workloads
+          server: harbor.platform.sbx.tanzufederal.com
+      templateRef:
+        kind: ClusterImageTemplate
+        name: image-scanner-template
+    # GATE 3: Must provide secrets detection.
+    # This can be done with a Tekton pipeline that runs yelp/detect-secrets.
+    # Might need to make its Runnable have a app.kubernetes.io/component: test
+    # label so that we can see pipeline results in TAP.
+    # Alternatively we could just create a Pipeline within the AppNS that
+    # does this and have this supply chain look for it explicitly.
+    - name: detect-secrets
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-secrets-template
+      images:
+        - name: image
+          resource: scan-and-SBOM-image
+    # GATE 6: Must allow RPOC ISSM to review.
+    # This is a manual approval, i.e. someone needs to click a button.
+    # Cartographer/TAP doesn't seem to support this. One way around it would be to
+    # add a ClusterSource resource that uses a Tekton Pipeline which waits for approval to come from
+    # somewhere else (like ServiceNow).
+    - name: issm-review
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-issm-review-template
+      images:
+        - name: image
+          resource: detect-secrets
+    # GATE 7: Have ISSM sign the container image
+    # Build Service signs all images, but if a signature from an ISSM's public key
+    # is required, "docker trust" can be used here.
+    # The ISSM's public key would need to be looked up somehow, so assuming that ISSMs
+    # use individual keys and are assigned semi-randomly, a resource could be added to the start
+    # of the supply chain that waits for someone to "commit" information about the ISSM and, once
+    # obtained, pass that down to this resource.
+    - name: issm-sign
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-issm-sign-template
+      images:
+        - name: image
+          resource: issm-review
+    # GATE 8: Container image must be stored in a repository. An Image Template can be used for
+    # this.
+    - name: push-signed-image
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-push-template
+      images:
+        - name: image
+          resource: issm-sign
+    # Everything after this point is basically the delivery preparation tasks from
+    # the source-test-scan-to-url supply chain.
+    - name: config-provider
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: convention-template
+      images:
+        - name: image
+          resource: push-signed-image
+      params:
+      - default: default
+        name: serviceAccount
+    - configs:
+      - name: config
+        resource: config-provider
+      name: app-config
+      templateRef:
+        kind: ClusterConfigTemplate
+        options:
+        - name: config-template
+          selector:
+            matchLabels:
+              apps.tanzu.vmware.com/workload-type: web
+              apps.tanzu.vmware.com/workload-type: custom
+        - name: server-template
+          selector:
+            matchLabels:
+              apps.tanzu.vmware.com/workload-type: server
+        - name: worker-template
+          selector:
+            matchLabels:
+              apps.tanzu.vmware.com/workload-type: worker
+    - configs:
+      - name: app_def
+        resource: app-config
+      name: service-bindings
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: service-bindings
+    - configs:
+      - name: app_def
+        resource: service-bindings
+      name: api-descriptors
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: api-descriptors
+    - configs:
+      - name: config
+        resource: api-descriptors
+      name: config-writer
+      params:
+      - default: default
+        name: serviceAccount
+      - name: registry
+        value:
+          ca_cert_data: ""
+          repository: tap-1.6.1/workloads
+          server: harbor.platform.sbx.tanzufederal.com
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: config-writer-template-with-postflight
+    # GATE 5: Must provide DAST
+    - name: dast-scan
+      params:
+      - default: default
+        name: serviceAccount
+      templateRef:
+        kind: ClusterTemplate
+        name: raise-dast-scan-template
+      configs:
+        - name: config
+          resource: config-writer
+    - name: deliverable
+      params:
+      - name: registry
+        value:
+          ca_cert_data: ""
+          repository: tap-1.6.1/workloads
+          server: harbor.platform.sbx.tanzufederal.com
+      - default: go-git
+        name: gitImplementation
+      templateRef:
+        kind: ClusterTemplate
+        name: deliverable-template

@@ -1,0 +1,18 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: example-raise-compliant-vendor-image
+  labels:
+    apps.tanzu.vmware.com/workload-type: vendor-image
+    app.kubernetes.io/part-of: example-raise-compliant-app
+    frameworks.doncio.navy.mil/requires-raise: "true"
+    apps.tanzu.vmware.com/has-tests: 'true'
+spec:
+  params:
+    - name: dockerfile
+      value: ./Dockerfile
+  source:
+    git:
+      url: https://github.com/carlosonunez-vmw/example-image-vendoring-with-tap
+      ref:
+        branch: main
