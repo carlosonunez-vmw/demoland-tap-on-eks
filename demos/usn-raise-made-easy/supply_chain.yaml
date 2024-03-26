@@ -45,6 +45,19 @@ spec:
       templateRef:
         kind: ClusterSourceTemplate
         name: testing-pipeline
+    # GATE 3: Must provide secrets detection.
+    # This can be done with a Tekton pipeline that runs yelp/detect-secrets.
+    # Might need to make its Runnable have a app.kubernetes.io/component: test
+    # label so that we can see pipeline results in TAP.
+    # Alternatively we could just create a Pipeline within the AppNS that
+    # does this and have this supply chain look for it explicitly.
+    - name: detect-secrets
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-secrets-template
+      images:
+        - name: image
+          resource: test-source
     # GATE 1b: Create a container image from this app's source code
     # now that the source code has undergone SAST
     - name: image-provider
@@ -66,7 +79,7 @@ spec:
         name: docker_build_extra_args
       sources:
       - name: source
-        resource: test-source
+        resource: detect-secrets
       templateRef:
         kind: ClusterImageTemplate
         options:
@@ -80,9 +93,9 @@ spec:
             matchFields:
             - key: spec.params[?(@.name=="dockerfile")]
               operator: Exists
-    # GATE 2: Must provide SBOM. Also includes image scanning.
+    # GATE 2: Must provide SBOM. Also includes image scanning, and
     # GATE 4: Must scan the container. Superceded by container image scanning.
-    - name: scan-and-SBOM-image
+    - name: scan-image
       images:
       - name: image
         resource: image-provider
@@ -99,19 +112,6 @@ spec:
       templateRef:
         kind: ClusterImageTemplate
         name: image-scanner-template
-    # GATE 3: Must provide secrets detection.
-    # This can be done with a Tekton pipeline that runs yelp/detect-secrets.
-    # Might need to make its Runnable have a app.kubernetes.io/component: test
-    # label so that we can see pipeline results in TAP.
-    # Alternatively we could just create a Pipeline within the AppNS that
-    # does this and have this supply chain look for it explicitly.
-    - name: detect-secrets
-      templateRef:
-        kind: ClusterImageTemplate
-        name: raise-secrets-template
-      images:
-        - name: image
-          resource: scan-and-SBOM-image
     # GATE 6: Must allow RPOC ISSM to review.
     # This is a manual approval, i.e. someone needs to click a button.
     # Cartographer/TAP doesn't seem to support this. One way around it would be to
@@ -123,7 +123,7 @@ spec:
         name: raise-issm-review-template
       images:
         - name: image
-          resource: detect-secrets
+          resource: scan-image
     # GATE 7: Have ISSM sign the container image
     # Build Service signs all images, but if a signature from an ISSM's public key
     # is required, "docker trust" can be used here.
