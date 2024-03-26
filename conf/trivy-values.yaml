@@ -1,0 +1,8 @@
+#@ load("@ytt:data", "data")
+namespace: #@ data.values.app_namespace
+targetImagePullSecret: #@ data.values.registry_credentials
+metadataStore:
+  url: https://metadata-store-app.metadata-store.svc.cluster.local:8443
+  caSecret:
+    name: app-tls-cert
+    importFromNamespace: ""

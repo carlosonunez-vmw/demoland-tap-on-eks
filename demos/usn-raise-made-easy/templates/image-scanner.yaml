@@ -1,0 +1,20 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterImageTemplate
+metadata:
+  name: raise-image-scanner-template
+spec:
+  healthRule:
+    alwaysHealthy: {}
+  lifecycle: mutable
+  imagePath: .data.image
+  ytt: |
+    ---
+    #@ load("@ytt:data", "data")
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      labels:
+        frameworks.doncio.navy.mil/requires-raise: "true"
+      name: #@ data.values.workload.metadata.name + "-image-scanner-cm"
+    data:
+      image: #@ data.values.image

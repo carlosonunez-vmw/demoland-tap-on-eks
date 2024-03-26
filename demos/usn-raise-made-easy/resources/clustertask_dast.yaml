@@ -1,0 +1,68 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: perform-dast-scan-owasp-zap
+spec:
+  description: |-
+    Performs a DAST scan using the containerized version of OWASP's ZAP.
+    See https://www.zaproxy.org/docs/docker/about/ to learn more about ZAP in Docker.
+  params:
+  - name: workload_name
+    description: The name of the workload.
+    type: string
+  - name: workload_namespace
+    description: The workload's namespace.
+    type: string
+  results:
+  - name: external-workload-url
+    description: The URL of the workload as seen from the outside world.
+  - name: scan-log
+    description: The log that ZAP produced during the scan.
+  - name: scan-result
+    description: The result of the ZAP scan.
+    type: string
+  steps:
+  - image: bash:5
+    name: get-the-url
+    script: |
+      #!/usr/bin/env bash
+      set -eo pipefail
+      apk add curl jq --no-progress -q
+      public_app_url=$(curl -sSk --cacert '/var/run/secrets/kubernetes.io/serviceaccount/token' \
+         -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+         "https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/apis/projectcontour.io/v1/namespaces/apps/httpproxies" |
+         jq -r \
+            --arg workload_name "$(params.workload_name)" \
+            --arg workload_namespace "$(params.workload_namespace)" \
+            '.items[].spec.virtualhost.fqdn | select(. | test("^" + $workload_name + "." + $workload_namespace + ".(?!svc.*)"))')
+      if test -z "$public_app_url"
+      then
+        >&2 echo "ERROR: No public URL found for app: $(params.workload_name)"
+        exit 1
+      fi
+      grep -Eq '^http' <<< "$public_app_url" || public_app_url="https://$public_app_url"
+      echo "$public_app_url" > $(results.external-workload-url.path)
+  - image: owasp/zap2docker-stable
+    name: do-the-scan
+    script: |
+      #!/usr/bin/env bash
+      set -o pipefail
+      result_code_message_map=$(cat <<-EOF
+      0:clean,0
+      1:failure-detected,1
+      2:clean-with-warnings,0
+      3:general-error,3
+      EOF
+      )
+
+      url=$(cat $(results.external-workload-url.path)) || exit 1
+      >&2 echo "Scanning: $url"
+      zap-baseline.py -l WARN -t "$url" | tee $(results.scan-log.path)
+      result="$?"
+      result_message_with_code=$(echo "$result_code_message_map" |
+        grep -E "^$result" |
+        cut -f2 -d ':')
+      result_message="$(cut -f1 -d ',' <<< "$result_message_with_code")"
+      actual_exit_code="$(cut -f2 -d ',' <<< "$result_message_with_code")"
+      echo "$results_message" > $(results.scan-result.path)
+      exit "$actual_exit_code"

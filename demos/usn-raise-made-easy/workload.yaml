@@ -1,0 +1,15 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: example-raise-compliant-app
+  labels:
+    apps.tanzu.vmware.com/workload-type: custom
+    app.kubernetes.io/part-of: example-raise-compliant-app
+    frameworks.doncio.navy.mil/requires-raise: "true"
+    apps.tanzu.vmware.com/has-tests: 'true'
+spec:
+  source:
+    git:
+      url: https://github.com/carlosonunez-vmw/example-java-app.git
+      ref:
+        branch: main

@@ -82,3 +82,8 @@ kapp deploy -a tap-dev-namespace-config \
     -n tap-install \
     --into-ns "$DEV_NAMESPACE" \
     --yes
+  kapp deploy -a "tap-${DEV_NAMESPACE}-trivy-scan-policy" \
+    -f "$(dirname "$0")/conf/trivy-scan-policy.yaml" \
+    -n tap-install \
+    --into-ns "$DEV_NAMESPACE" \
+    --yes

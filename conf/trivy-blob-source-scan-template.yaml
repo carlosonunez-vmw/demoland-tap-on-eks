@@ -1,0 +1,168 @@
+apiVersion: scanning.apps.tanzu.vmware.com/v1beta1
+kind: ScanTemplate
+metadata:
+  name: trivy-blob-source-scan-template
+spec:
+  template:
+    containers:
+    - args:
+      - process
+      - -f
+      - /workspace
+      command:
+      - /aggregator
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.6.1/tap-scanners/trivy-scanner@sha256:9f0628760d11b2f88d5760df7bacd3ea60bf1436ef6f9b9f7b57fbe2c12efdec
+      imagePullPolicy: IfNotPresent
+      name: summary
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+        readOnly: true
+    initContainers:
+    - args:
+      - -c
+      - echo "$CA_CERT" > /ca-cert-secret/ca_cert.crt
+      command:
+      - /bin/bash
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.6.1/tap-scanners/trivy-scanner@sha256:30294bc1619afb5a1bc2f156976c609be0a76b45fffd4e4958ecb35d2784c249
+      imagePullPolicy: IfNotPresent
+      name: ca-cert
+      volumeMounts:
+      - mountPath: /ca-cert-secret
+        name: ca-cert-secret
+    - args:
+      - -c
+      - mkdir /workspace/source
+      command:
+      - /bin/bash
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.6.1/tap-scanners/trivy-scanner@sha256:30294bc1619afb5a1bc2f156976c609be0a76b45fffd4e4958ecb35d2784c249
+      imagePullPolicy: IfNotPresent
+      name: initialize-scanner-workspace
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+        readOnly: false
+    - args:
+      - -c
+      - ./source/untar-gitrepository.sh $REPOSITORY /workspace/source
+      command:
+      - /bin/bash
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.6.1/tap-scanners/trivy-scanner@sha256:30294bc1619afb5a1bc2f156976c609be0a76b45fffd4e4958ecb35d2784c249
+      imagePullPolicy: IfNotPresent
+      name: repo
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+        readOnly: false
+    - args:
+      - -c
+      - ./source/scan-source.sh /workspace/source/scan.json /workspace/source/out.yaml
+        /workspace/source/repo blob
+      command:
+      - /bin/bash
+      env:
+      - name: SSL_CERT_DIR
+        value: /etc/pki/tls/certs:/ca-cert-secret
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.6.1/tap-scanners/trivy-scanner@sha256:a8020373bf56bfeb9d682e113856007bfbde08b00dfb8e987a3dc5b245c6595d
+      imagePullPolicy: IfNotPresent
+      name: scan-plugin
+      resources:
+        limits:
+          cpu: 1000m
+        requests:
+          cpu: 250m
+          memory: 128Mi
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+        readOnly: false
+      - mountPath: /.cache
+        name: cache
+        readOnly: false
+      - mountPath: /ca-cert-secret
+        name: ca-cert-secret
+        readOnly: true
+    - args:
+      - -c
+      - |
+        set -euo pipefail
+        if [[ -z ${METADATA_STORE_ACCESS_TOKEN:-""} ]]
+        then
+          METADATA_STORE_ACCESS_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+        fi
+        /insight config set-target $METADATA_STORE_URL --ca-cert /metadata-store/ca.crt --access-token $METADATA_STORE_ACCESS_TOKEN
+      command:
+      - bash
+      env:
+      - name: METADATA_STORE_URL
+        value: https://metadata-store-app.metadata-store.svc.cluster.local:8443
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.6.1/tap-scanners/trivy-scanner@sha256:be8dc27b142e6a2478a4716b821ce6d554fc5275426cda0417b6be0564a9c0da
+      imagePullPolicy: IfNotPresent
+      name: metadata-store-plugin-config
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+        readOnly: false
+      - mountPath: /home/scanning/.config
+        name: insight-config
+        readOnly: false
+      - mountPath: /metadata-store
+        name: metadata-store-ca-cert
+        readOnly: true
+    - args:
+      - -c
+      - |
+        cp -r $HOME/.config/tanzu /.config
+        /send-scan-results.sh source add --cyclonedxtype xml --path /workspace/source/scan.xml
+      command:
+      - bash
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.6.1/tap-scanners/trivy-scanner@sha256:be8dc27b142e6a2478a4716b821ce6d554fc5275426cda0417b6be0564a9c0da
+      imagePullPolicy: IfNotPresent
+      name: metadata-store-plugin
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+        readOnly: false
+      - mountPath: /home/scanning/.config
+        name: insight-config
+      - mountPath: /.config
+        name: insight-config-temp
+    - args:
+      - check
+      - --policy
+      - $(POLICY)
+      - --scan-results
+      - /workspace/source/scan.xml
+      - --parser
+      - xml
+      - --format
+      - yaml
+      - --output
+      - /workspace/compliance-plugin/out.yaml
+      command:
+      - /compliance
+      image: harbor.platform.sbx.tanzufederal.com/tap-1.6.1/tap-scanners/trivy-scanner@sha256:b19f874235bbfd8beac288009c6fba54f6f75e955a597b916d2b7a2ce3381937
+      imagePullPolicy: IfNotPresent
+      name: compliance-plugin
+      volumeMounts:
+      - mountPath: /workspace
+        name: workspace
+        readOnly: false
+    restartPolicy: Never
+    securityContext:
+      runAsNonRoot: true
+    serviceAccountName: trivy-scanner
+    volumes:
+    - emptyDir: {}
+      name: workspace
+    - emptyDir: {}
+      name: insight-config
+    - emptyDir: {}
+      name: insight-config-temp
+    - emptyDir: {}
+      name: cache
+    - emptyDir: {}
+      name: ca-cert-secret
+    - name: metadata-store-ca-cert
+      secret:
+        secretName: app-tls-cert

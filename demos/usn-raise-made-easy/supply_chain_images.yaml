@@ -1,0 +1,144 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterSupplyChain
+metadata:
+  name: raise-vendor-images
+spec:
+  selector:
+    frameworks.doncio.navy.mil/requires-raise: "true"
+    apps.tanzu.vmware.com/workload-type: vendor-image
+  resources:
+    # GATE 0: Grab source and build image from it.
+    - name: source-provider
+      params:
+      - default: default
+        name: serviceAccount
+      - default: go-git
+        name: gitImplementation
+      templateRef:
+        kind: ClusterSourceTemplate
+        name: source-template
+    - name: image-provider
+      params:
+      - default: default
+        name: serviceAccount
+      - name: registry
+        value:
+          ca_cert_data: ""
+          repository: tap-1.6.1/workloads
+          server: harbor.platform.sbx.tanzufederal.com
+      - default: default
+        name: clusterBuilder
+      - default: ./Dockerfile
+        name: dockerfile
+      - default: ./
+        name: docker_build_context
+      - default: []
+        name: docker_build_extra_args
+      sources:
+      - name: source
+        resource: source-provider
+      templateRef:
+        kind: ClusterImageTemplate
+        options:
+        - name: kpack-template
+          selector:
+            matchFields:
+            - key: spec.params[?(@.name=="dockerfile")]
+              operator: DoesNotExist
+        - name: kaniko-template
+          selector:
+            matchFields:
+            - key: spec.params[?(@.name=="dockerfile")]
+              operator: Exists
+    # GATE 2: Must provide SBOM. Also includes image scanning.
+    - name: SBOM
+      images:
+      - name: image
+        resource: image-provider
+      params:
+      - default: scan-policy
+        name: scanning_image_policy
+      - default: private-image-scan-template
+        name: scanning_image_template
+      - name: registry
+        value:
+          ca_cert_data: ""
+          repository: tap-1.6.1/workloads
+          server: harbor.platform.sbx.tanzufederal.com
+      templateRef:
+        kind: ClusterImageTemplate
+        name: image-scanner-template
+    # GATE 1: must provide SAST for available source code
+    - name: SAST
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-sast-template
+      images:
+        - name: image
+          resource: SBOM
+    # GATE 3: Must provide secrets detection.
+    # This can be done with a Tekton pipeline that runs yelp/detect-secrets.
+    # Might need to make its Runnable have a app.kubernetes.io/component: test
+    # label so that we can see pipeline results in TAP.
+    # Alternatively we could just create a Pipeline within the AppNS that
+    # does this and have this supply chain look for it explicitly.
+    - name: detect-secrets
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-secrets-template
+      images:
+        - name: image
+          resource: SAST
+    # GATE 4: Must provide Container Security Scanning.
+    # This can be accomplished with TAP's built-in Grype.
+    - name: scan-container
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-image-scanner-template
+      images:
+        - name: image
+          resource: detect-secrets
+    # GATE 5: Must provide DAST.
+    # This can be accomplished with OWASP ZAP.
+    - name: DAST
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-dast-template
+      images:
+        - name: image
+          resource: scan-container
+    # GATE 6: Must allow RPOC ISSM to review.
+    # This is a manual approval, i.e. someone needs to click a button.
+    # Cartographer/TAP doesn't seem to support this. One way around it would be to
+    # add a ClusterSource resource that uses a Tekton Pipeline which waits for approval to come from
+    # somewhere else (like ServiceNow).
+    - name: issm-review
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-issm-review-template
+      images:
+        - name: image
+          resource: DAST
+    # GATE 7: Have ISSM sign the container image
+    # Build Service signs all images, but if a signature from an ISSM's public key
+    # is required, "docker trust" can be used here.
+    # The ISSM's public key would need to be looked up somehow, so assuming that ISSMs
+    # use individual keys and are assigned semi-randomly, a resource could be added to the start
+    # of the supply chain that waits for someone to "commit" information about the ISSM and, once
+    # obtained, pass that down to this resource.
+    - name: issm-sign
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-issm-sign-template
+      images:
+        - name: image
+          resource: issm-review
+    # GATE 8: Container image must be stored in a repository. An Image Template can be used for
+    # this.
+    - name: push-signed-image
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-push-template
+      images:
+        - name: image
+          resource: issm-sign
