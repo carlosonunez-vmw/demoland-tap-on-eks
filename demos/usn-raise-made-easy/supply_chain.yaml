@@ -52,15 +52,21 @@ spec:
     # Alternatively we could just create a Pipeline within the AppNS that
     # does this and have this supply chain look for it explicitly.
     - name: detect-secrets
-      templateRef:
-        kind: ClusterImageTemplate
-        name: raise-secrets-template
-      images:
-        - name: image
+      sources:
+        - name: source
           resource: test-source
+      templateRef:
+        kind: ClusterSourceTemplate
+        name: raise-secrets-template
+      params:
+        - name: serviceAccount
+          default: default
     # GATE 1b: Create a container image from this app's source code
     # now that the source code has undergone SAST
     - name: image-provider
+      sources:
+      - name: source
+        resource: detect-secrets
       params:
       - default: default
         name: serviceAccount
@@ -77,9 +83,6 @@ spec:
         name: docker_build_context
       - default: []
         name: docker_build_extra_args
-      sources:
-      - name: source
-        resource: detect-secrets
       templateRef:
         kind: ClusterImageTemplate
         options:
@@ -121,9 +124,6 @@ spec:
       templateRef:
         kind: ClusterImageTemplate
         name: raise-issm-review-template
-      images:
-        - name: image
-          resource: scan-image
     # GATE 7: Have ISSM sign the container image
     # Build Service signs all images, but if a signature from an ISSM's public key
     # is required, "docker trust" can be used here.
