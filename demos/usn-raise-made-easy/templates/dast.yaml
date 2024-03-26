@@ -36,5 +36,7 @@ spec:
           kind: ClusterTask
           name: perform-dast-scan-owasp-zap
         params:
-          - name: url
-            value: #@ "https://{}.{}.svc.cluster.local".format(data.values.workload.metadata.name, data.values.workload.metadata.namespace)
+          - name: workload_name
+            value: #@ data.values.workload.metadata.name
+          - name: workload_namespace
+            value: #@ data.values.workload.metadata.namespace
