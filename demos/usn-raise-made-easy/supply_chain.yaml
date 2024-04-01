@@ -61,6 +61,18 @@ spec:
       params:
         - name: serviceAccount
           default: default
+    # GATE 6: Must allow RPOC ISSM to review.
+    # This is a manual approval, i.e. someone needs to click a button.
+    # Cartographer/TAP doesn't seem to support this. One way around it would be to
+    # add a ClusterSource resource that uses a Tekton Pipeline which waits for approval to come from
+    # somewhere else (like ServiceNow).
+    - name: issm-review
+      images:
+        - name: image
+          resource: detect-secrets
+      templateRef:
+        kind: ClusterSourceTemplate
+        name: raise-issm-review-template
     # GATE 1b: Create a container image from this app's source code
     # now that the source code has undergone SAST
     - name: image-provider
@@ -115,18 +127,6 @@ spec:
       templateRef:
         kind: ClusterImageTemplate
         name: image-scanner-template
-    # GATE 6: Must allow RPOC ISSM to review.
-    # This is a manual approval, i.e. someone needs to click a button.
-    # Cartographer/TAP doesn't seem to support this. One way around it would be to
-    # add a ClusterSource resource that uses a Tekton Pipeline which waits for approval to come from
-    # somewhere else (like ServiceNow).
-    - name: issm-review
-      images:
-        - name: image
-          resource: scan-image
-      templateRef:
-        kind: ClusterImageTemplate
-        name: raise-issm-review-template
     # GATE 7: Have ISSM sign the container image
     # Build Service signs all images, but if a signature from an ISSM's public key
     # is required, "docker trust" can be used here.
@@ -137,7 +137,7 @@ spec:
     - name: issm-sign
       images:
         - name: image
-          resource: issm-review
+          resource: scan-image
       templateRef:
         kind: ClusterImageTemplate
         name: raise-issm-sign-template

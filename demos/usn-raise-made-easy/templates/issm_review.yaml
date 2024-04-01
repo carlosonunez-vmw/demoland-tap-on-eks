@@ -1,5 +1,5 @@
 apiVersion: carto.run/v1alpha1
-kind: ClusterImageTemplate
+kind: ClusterSourceTemplate
 metadata:
   name: raise-issm-review-template
 spec:
