@@ -121,6 +121,9 @@ spec:
     # add a ClusterSource resource that uses a Tekton Pipeline which waits for approval to come from
     # somewhere else (like ServiceNow).
     - name: issm-review
+      images:
+        - name: image
+          resource: scan-image
       templateRef:
         kind: ClusterImageTemplate
         name: raise-issm-review-template
@@ -132,30 +135,30 @@ spec:
     # of the supply chain that waits for someone to "commit" information about the ISSM and, once
     # obtained, pass that down to this resource.
     - name: issm-sign
-      templateRef:
-        kind: ClusterImageTemplate
-        name: raise-issm-sign-template
       images:
         - name: image
           resource: issm-review
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-issm-sign-template
     # GATE 8: Container image must be stored in a repository. An Image Template can be used for
     # this.
     - name: push-signed-image
-      templateRef:
-        kind: ClusterImageTemplate
-        name: raise-push-template
       images:
         - name: image
           resource: issm-sign
+      templateRef:
+        kind: ClusterImageTemplate
+        name: raise-push-template
     # Everything after this point is basically the delivery preparation tasks from
     # the source-test-scan-to-url supply chain.
     - name: config-provider
-      templateRef:
-        kind: ClusterConfigTemplate
-        name: convention-template
       images:
         - name: image
           resource: push-signed-image
+      templateRef:
+        kind: ClusterConfigTemplate
+        name: convention-template
       params:
       - default: default
         name: serviceAccount
