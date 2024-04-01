@@ -1,5 +1,5 @@
 apiVersion: carto.run/v1alpha1
-kind: ClusterSourceTemplate
+kind: ClusterImageTemplate
 metadata:
   name: raise-issm-review-template
 spec:
@@ -7,6 +7,30 @@ spec:
     alwaysHealthy: {}
   lifecycle: mutable
   imagePath: .data.image
+  # Here's how I think we can do this:
+  #
+  # 1. Gather these artifacts from the Metadata Store:
+  #
+  # - SAST CycloneDX BOM
+  # - Source Scan CycloneDX BOM
+  #
+  # 2. Gather these artifacts from Pod Logs:
+  #
+  # - `detect-secrets` logs (might require a tight coupling with a Tekton output
+  #    from the `detect-secrets` ClusterTask
+  # - Pod `stdout` from the SAST, Source Scan and Image Scan stages
+  #
+  # Put these files in `scans/$(workload_name)/`
+  #
+  # 3. Clone the review repo.
+  #
+  # 4. Create a new branch for these new files.
+  #
+  # 5. Add these files, then commit them.
+  #
+  # 6. Push the commit.
+  #
+  # 7. Create a new PR to merge this new branch into `main`. This is what `issm-sign` will wait on.
   ytt: |
     ---
     #@ load("@ytt:data", "data")
