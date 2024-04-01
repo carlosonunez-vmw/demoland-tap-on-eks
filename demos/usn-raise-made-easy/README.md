@@ -54,13 +54,46 @@ kubectl apply -f ./demos/usn-raise-made-easy/supply_chain.yaml
 
 ### Passing Supply Chain
 
-4. Apply the workload:
+1. Create a fork `github.com/carlosonunez-vmw/example-java-app` within GitHub,
+   then update the Git URL reference in
+   `./demos/usn-raise-made-easy/workload.yaml` to the URL of your fork.
 
-```sh
-kubectl apply -f ./demos/usn-raise-made-easy/workload.yaml
+2. Apply the workload:
+
+   ```sh
+   kubectl apply -f ./demos/usn-raise-made-easy/workload.yaml
+   ```
+
+3. Visit the TAP Developer Portal to see the workload progress through
+   the `raise-to-url` Supply Chain.
+
+### Failing the Supply Chain with a Leaked Secret
+
+Commit the file below into your fork and push your changes:
+
+```text
+--- BEGIN RSA PRIVATE KEY ---
+whatever
+--- END RSA PRIVATE KEY ---
 ```
 
-5. Visit the GUI and watch it fly!
+The workload should go through the Supply Chain again in about a minute, and
+"Detect Secrets" should fail with an error similar to the below in the logs:
+
+```
+ERROR: Secrets scan failed! See results below to see where secrets were found.
+{
+  "name_of_your_file.txt": [
+      {
+        "type": "Private Key",
+        "filename": "/repo/secret.txt",
+        "hashed_secret": "some_hash",
+        "is_verified": false,
+        "line_number": 1
+      }
+  ]
+}
+```
 
 ## Things To Point Out
 
