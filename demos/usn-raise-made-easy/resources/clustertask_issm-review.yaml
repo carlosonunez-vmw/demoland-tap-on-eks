@@ -1,0 +1,58 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: perform-raise-issm-review
+spec:
+  description: |-
+    Commits scan artifacts and logs collected during a RAISE Supply Chain invocation
+    into a Git repository for further review.
+  params:
+  - name: metadata_store_url
+  - name: issm_review_github_secret_name
+  - name: image_url
+  - name: review_branch_name
+  results:
+  - name: provided_image_url
+  workspaces:
+    - name: default
+      mountPath: /workspace
+  steps:
+  # output-repo-properties is needed so that the
+  # ClusterSourceTemplate that calls this task can re-retrieve the 
+  - image: bitnami/git:2.44.0
+    name: clone-review-repository
+    env:
+      - name: PROJECT_NAME
+        valueFrom:
+          secretKeyRef:
+            name: $(params.issm_review_github_secret_name)
+            key: review_github_project
+      - name: GITHUB_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: $(params.issm_review_github_secret_name)
+            key: review_repo_username
+      - name: GITHUB_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: $(params.issm_review_github_secret_name)
+            key: review_repo_token
+    script: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      git clone "https://$GITHUB_USERNAME:$GITHUB_TOKEN@github.com/$PROJECT_NAME" /workspace/repo
+      git -C /workspace/repo remote set-url \
+        origin \
+        "https://$GITHUB_USERNAME:$GITHUB_TOKEN@github.com/$PROJECT_NAME"
+  - image: bitnami/git:2.44.0
+    name: create-review-branch
+    script: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      if git -C /workspace/repo branch --all | grep -q "$(params.review_branch_name)"
+      then
+        >&2 echo "INFO: Branch already created; skipping: $(params.review_branch_name)"
+          exit 0
+      fi
+      git -C /workspace/repo checkout -b "$(params.review_branch_name)"
+      git -C /workspace/repo push -u origin "$(params.review_branch_name)"

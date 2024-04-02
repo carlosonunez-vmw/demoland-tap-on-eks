@@ -128,8 +128,10 @@ spec:
         kind: ClusterImageTemplate
         name: raise-issm-review-template
       params:
-        - name: issm-review-config-secrets
-          default: issm-review-config
+        - name: serviceAccount
+          default: default
+        - name: github_token_secret
+          default: issm-review-github-token
     # GATE 7: Have ISSM sign the container image
     # Build Service signs all images, but if a signature from an ISSM's public key
     # is required, "docker trust" can be used here.
