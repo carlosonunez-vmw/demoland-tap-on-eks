@@ -26,43 +26,62 @@ spec:
     name: get-the-url
     script: |
       #!/usr/bin/env bash
-      set -eo pipefail
-      apk add curl jq --no-progress -q
-      public_app_url=$(curl -sSk --cacert '/var/run/secrets/kubernetes.io/serviceaccount/token' \
-         -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
-         "https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/apis/projectcontour.io/v1/namespaces/apps/httpproxies" |
-         jq -r \
-            --arg workload_name "$(params.workload_name)" \
-            --arg workload_namespace "$(params.workload_namespace)" \
-            '.items[].spec.virtualhost.fqdn | select(. | test("^" + $workload_name + "." + $workload_namespace + ".(?!svc.*)"))')
-      if test -z "$public_app_url"
-      then
-        >&2 echo "ERROR: No public URL found for app: $(params.workload_name)"
-        exit 1
-      fi
-      grep -Eq '^http' <<< "$public_app_url" || public_app_url="https://$public_app_url"
-      echo "$public_app_url" > $(results.external-workload-url.path)
+      max_attempts=3600
+      attempt=0
+      while test "$attempt" -lt "$max_attempts"
+      do
+        apk add curl jq --no-progress -q
+        public_app_url=$(curl -sSk --cacert '/var/run/secrets/kubernetes.io/serviceaccount/token' \
+           -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+           "https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/apis/projectcontour.io/v1/namespaces/apps/httpproxies" |
+           jq -r \
+              --arg workload_name "$(params.workload_name)" \
+              --arg workload_namespace "$(params.workload_namespace)" \
+              '.items[].spec.virtualhost.fqdn | select(. | test("^" + $workload_name + "." + $workload_namespace + ".(?!svc.*)"))')
+        if test -z "$public_app_url"
+        then
+          >&2 echo "WARN: [$attempt/$max_attempts] No public URL found for app: $(params.workload_name); trying again in 1m"
+          attempt=$((attempt+1))
+          sleep 1m
+        fi
+        grep -Eq '^http' <<< "$public_app_url" || public_app_url="https://$public_app_url"
+        echo "$public_app_url" > $(results.external-workload-url.path)
+      done
+      >&2 echo "ERROR: Max attempts exceeded."
+      exit 1
   - image: owasp/zap2docker-stable
     name: do-the-scan
     script: |
       #!/usr/bin/env bash
-      set -o pipefail
-      result_code_message_map=$(cat <<-EOF
-      0:clean,0
-      1:failure-detected,1
-      2:clean-with-warnings,0
-      3:general-error,3
-      EOF
-      )
+      actual_exit_code=3
+      max_attempts=3600
+      attempt=0
+      while test "$attempt" -lt "$max_attempts"
+      do
+        result_code_message_map=$(cat <<-EOF
+        0:clean,0
+        1:failure-detected,1
+        2:clean-with-warnings,0
+        3:general-error,3
+        EOF
+        )
 
-      url=$(cat $(results.external-workload-url.path)) || exit 1
-      >&2 echo "Scanning: $url"
-      zap-baseline.py -l WARN -t "$url" | tee $(results.scan-log.path)
-      result="$?"
-      result_message_with_code=$(echo "$result_code_message_map" |
-        grep -E "^$result" |
-        cut -f2 -d ':')
-      result_message="$(cut -f1 -d ',' <<< "$result_message_with_code")"
-      actual_exit_code="$(cut -f2 -d ',' <<< "$result_message_with_code")"
-      echo "$results_message" > $(results.scan-result.path)
+        url=$(cat $(results.external-workload-url.path)) || exit 1
+        >&2 echo "Scanning: $url"
+        zap-baseline.py -l WARN -t "$url" | tee $(results.scan-log.path)
+        result="$?"
+        result_message_with_code=$(echo "$result_code_message_map" |
+          grep -E "^$result" |
+          cut -f2 -d ':')
+        result_message="$(cut -f1 -d ',' <<< "$result_message_with_code")"
+        actual_exit_code="$(cut -f2 -d ',' <<< "$result_message_with_code")"
+        echo "$results_message" > $(results.scan-result.path)
+        if test "$actual_exit_code" -eq 0 || test "$actual_exit_code" -eq 2
+        then exit "$actual_exit_code"
+        fi
+        >&2 echo "INFO: [$attempt/$max_attempts] Scan failed. Trying again in one minute: $results_message"
+        sleep 1m
+      done
+      >&2 echo "INFO: Max scan attempts exceeded. Delete Pods associated with this resource and try again."
+      >&2 echo "Here's an example of how you can do that: kubectl -n $DEV_NAMESPACE delete pod -l carto.run/resource-name=dast-scan"
       exit "$actual_exit_code"
