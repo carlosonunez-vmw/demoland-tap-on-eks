@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: allow-trivy-to-view-source-scans
+  namespace: apps
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: view-scans
+subjects:
+- kind: ServiceAccount
+  name: trivy-scanner
+

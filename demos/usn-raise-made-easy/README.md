@@ -32,6 +32,36 @@ Learn more about the RAISE framework
 
 ### Instructions
 
+#### Set up GitHub
+
+1. [**Create a GitHub repository**](https://github.com/new) to use for storing
+   examples of "ISSM Reviews" that would be conducted during deployments.
+
+2. [**Create a GitHub
+   Token**](https://github.com/settings/personal-access-tokens/new). This will
+   be used to create pull requests for new example ISSM Reviews in the "ISSM
+   Reviews" repository defined above.
+
+   Your token needs to have the following permissions applied:
+
+   - **Contents**: Read and Write
+   - **Pull Requests**: Read and Write
+   - **Metadata**: Read-Only
+
+3. Create a Kubernetes secret to store this data into:
+
+   ```sh
+   ytt -v namespace=$YOUR_APP_NAMESPACE \
+       -v project_name=$YOUR_GITHUB_REPO_PROJECT \
+       -v github_token=$YOUR_REPO_TOKEN \
+       -f ./demos/usn-raise-made-easy/resources/secret_issm_review.yaml |
+       kubectl apply -f -
+   ```
+
+   `$YOUR_GITHUB_REPO_PROJECT` is everything after "https://github.com".
+
+#### Apply Kubernetes resources
+
 1. Apply resources:
 
 ```sh

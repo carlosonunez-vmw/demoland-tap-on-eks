@@ -6,13 +6,70 @@ spec:
   healthRule:
     alwaysHealthy: {}
   lifecycle: mutable
-  imagePath: .data.image
+  imagePath: .status.taskResults[?(@.name=="provided_image_url")].value
+  # Here's how I think we can do this:
+  #
+  # 1. Gather these artifacts from the Metadata Store:
+  #
+  # - SAST CycloneDX BOM
+  # - Source Scan CycloneDX BOM
+  #
+  # 2. Gather these artifacts from Pod Logs:
+  #
+  # - `detect-secrets` logs (might require a tight coupling with a Tekton output
+  #    from the `detect-secrets` ClusterTask
+  # - Pod `stdout` from the SAST, Source Scan and Image Scan stages
+  #
+  # Put these files in `scans/$(workload_name)/`
+  #
+  # 3. Clone the review repo.
+  #
+  # 4. Create a new branch for these new files.
+  #
+  # 5. Add these files, then commit them.
+  #
+  # 6. Push the commit.
+  #
+  # 7. Create a new PR to merge this new branch into `main`. This is what `issm-sign` will wait on.
   ytt: |
+    #@ def merge_labels(fixed_values):
+    #@   labels = {}
+    #@   if hasattr(data.values.workload.metadata, "labels"):
+    #@     labels.update(data.values.workload.metadata.labels)
+    #@   end
+    #@   labels.update(fixed_values)
+    #@   return labels
+    #@ end
     ---
     #@ load("@ytt:data", "data")
-    apiVersion: v1
-    kind: ConfigMap
+    apiVersion: tekton.dev/v1beta1
+    kind: TaskRun
     metadata:
-      name: #@ data.values.workload.metadata.name + "-issm-review-cm"
-    data:
-      image: #@ data.values.image
+      generateName: #@ data.values.workload.metadata.name + "-issm-review"
+      name: #@ data.values.workload.metadata.name + "-issm-review"
+      labels: #@ merge_labels({ "app.kubernetes.io/component": "deploy" })
+    spec:
+      serviceAccountName: #@ data.values.params.serviceAccount
+      taskRef:
+        kind: ClusterTask
+        name: perform-raise-issm-review
+      params:
+        - name: image_url
+          value: #@ data.values.image
+        - name: metadata_store_url
+          value: https://metadata-store-app.metadata-store.svc.cluster.local:8443
+        - name: metadata_store_service_account
+          value: trivy-scanner
+        - name: metadata_store_ca_cert_secret
+          value: app-tls-cert
+        - name: issm_review_github_secret_name
+          value: #@ data.values.params.github_token_secret
+        - name: workload_name
+          value: #@ data.values.workload.metadata.name
+        - name: review_branch_name
+          value: #@ "{}-{}".format(data.values.workload.metadata.name,data.values.image.split("@")[1].split(":")[1])
+        - name: trunk_branch
+          value: main
+      workspaces:
+        - name: default
+          emptyDir: {}
