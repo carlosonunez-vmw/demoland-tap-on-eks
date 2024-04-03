@@ -64,8 +64,12 @@ spec:
           value: app-tls-cert
         - name: issm_review_github_secret_name
           value: #@ data.values.params.github_token_secret
+        - name: workload_name
+          value: #@ data.values.workload.metadata.name
         - name: review_branch_name
           value: #@ "{}-{}".format(data.values.workload.metadata.name,data.values.image.split("@")[1].split(":")[1])
+        - name: trunk_branch
+          value: main
       workspaces:
         - name: default
           emptyDir: {}
