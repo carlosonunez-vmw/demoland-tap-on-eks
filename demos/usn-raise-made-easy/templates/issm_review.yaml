@@ -58,6 +58,10 @@ spec:
           value: #@ data.values.image
         - name: metadata_store_url
           value: https://metadata-store-app.metadata-store.svc.cluster.local:8443
+        - name: metadata_store_service_account
+          value: trivy-scanner
+        - name: metadata_store_ca_cert_secret
+          value: app-tls-cert
         - name: issm_review_github_secret_name
           value: #@ data.values.params.github_token_secret
         - name: review_branch_name

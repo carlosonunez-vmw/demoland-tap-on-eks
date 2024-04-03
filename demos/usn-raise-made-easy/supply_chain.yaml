@@ -129,7 +129,7 @@ spec:
         name: raise-issm-review-template
       params:
         - name: serviceAccount
-          default: default
+          default: trivy-scanner
         - name: github_token_secret
           default: issm-review-github-token
     # GATE 7: Have ISSM sign the container image

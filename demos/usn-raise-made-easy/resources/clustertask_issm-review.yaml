@@ -8,6 +8,7 @@ spec:
     into a Git repository for further review.
   params:
   - name: metadata_store_url
+  - name: metadata_store_ca_cert_secret
   - name: issm_review_github_secret_name
   - name: image_url
   - name: review_branch_name
@@ -16,9 +17,31 @@ spec:
   workspaces:
     - name: default
       mountPath: /workspace
+  volumes:
+    - name: metadata-store-ca
+      secret:
+        secretName: $(params.metadata_store_ca_cert_secret)
   steps:
-  # output-repo-properties is needed so that the
-  # ClusterSourceTemplate that calls this task can re-retrieve the 
+  - image: bash:5
+    name: test-metadata-store-connection
+    volumeMounts:
+      - name: metadata-store-ca
+        mountPath: /mds-ca
+    script: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      apk add curl
+      # TODO: Don't connect insecurely.
+      result=$(curl -o /tmp/results.txt \
+        --cacert /mds-ca/ca.crt \
+        --cert /mds-ca/tls.crt \
+        --key /mds-ca/tls.key \
+        -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+        -w '%{http_code}' \
+        -sS \
+        $(params.metadata_store_url)/api/sources?repo=doesnt-exist)
+      test "$result" -eq 200 && exit 0
+      >&2 echo "[$result] Failed to connect to Metadata Store at $(params.metadata_store_url): $(cat /tmp/results.txt)"
   - image: bitnami/git:2.44.0
     name: clone-review-repository
     env:

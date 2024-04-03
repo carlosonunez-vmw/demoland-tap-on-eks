@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: view-scans
+  namespace: apps
+rules:
+- apiGroups:
+  - scanning.apps.tanzu.vmware.com
+  resources:
+  - sourcescans
+  - imagescans
+  verbs:
+  - get
+  - list
