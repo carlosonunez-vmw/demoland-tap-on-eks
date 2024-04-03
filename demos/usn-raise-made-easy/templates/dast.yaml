@@ -5,7 +5,7 @@ metadata:
 spec:
   healthRule:
     singleConditionType: Ready
-  lifecycle: mutable
+  lifecycle: tekton
   params:
   - default: {}
     name: registry

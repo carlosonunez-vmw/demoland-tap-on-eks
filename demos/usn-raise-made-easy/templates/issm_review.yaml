@@ -5,7 +5,7 @@ metadata:
 spec:
   healthRule:
     alwaysHealthy: {}
-  lifecycle: mutable
+  lifecycle: tekton
   imagePath: .status.taskResults[?(@.name=="provided_image_url")].value
   # Here's how I think we can do this:
   #
