@@ -3,8 +3,6 @@ kind: ClusterImageTemplate
 metadata:
   name: raise-issm-review-template
 spec:
-  healthRule:
-    alwaysHealthy: {}
   lifecycle: tekton
   imagePath: .status.taskResults[?(@.name=="provided_image_url")].value
   # Here's how I think we can do this:
@@ -46,7 +44,6 @@ spec:
     kind: TaskRun
     metadata:
       generateName: #@ data.values.workload.metadata.name + "-issm-review"
-      name: #@ data.values.workload.metadata.name + "-issm-review"
       labels: #@ merge_labels({ "app.kubernetes.io/component": "deploy" })
     spec:
       serviceAccountName: #@ data.values.params.serviceAccount

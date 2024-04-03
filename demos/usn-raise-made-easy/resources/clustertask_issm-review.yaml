@@ -188,7 +188,11 @@ spec:
             key: git_email
     script: |
       git -C /workspace/repo add /workspace/repo/$(params.workload_name)/*.json
-      git -C /workspace/repo diff-index --quiet HEAD && exit 0
+      if git -C /workspace/repo diff-index --quiet HEAD
+      then
+        >&2 echo "INFO: Nothing has changed. Skipping."
+        exit 0
+      fi 
       git -C /workspace/repo commit -m "[$(params.workload_name)] Source code and image SBOMs added"
       git -C /workspace/repo push
   - image: bash:5
@@ -212,7 +216,12 @@ spec:
     script: |
       #!/usr/bin/env bash
       set -euo pipefail
-      apk add curl jq
+      apk add curl jq git
+      if git -C /workspace/repo diff-index --quiet HEAD
+      then
+        >&2 echo "INFO: Nothing has changed. Skipping."
+        exit 0
+      fi 
       title="SBOM Review: $(params.review_branch_name)"
       existing_prs=$(curl -sS -L \
         -H "Accept: application/vnd.github+json" \
@@ -236,3 +245,100 @@ spec:
         -H "X-GitHub-Api-Version: 2022-11-28" \
         https://api.github.com/repos/$PROJECT_NAME/pulls \
         -d "$data" || exit 1
+  - image: bash:5
+    name: wait-for-pr-merge
+    env:
+      - name: PROJECT_NAME
+        valueFrom:
+          secretKeyRef:
+            name: $(params.issm_review_github_secret_name)
+            key: review_github_project
+      - name: GITHUB_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: $(params.issm_review_github_secret_name)
+            key: review_repo_username
+      - name: GITHUB_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: $(params.issm_review_github_secret_name)
+            key: review_repo_token
+    script: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      apk add curl jq
+      title="SBOM Review: $(params.review_branch_name)"
+      iterations=0
+      existing_pr_url=""
+      while true
+      do
+        pr=""
+        if test -n "$existing_pr_url"
+        then
+          pr=$(curl -sS -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "$existing_pr_url" | jq -r '.')
+        else
+          pr_json=$(curl -sS -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$PROJECT_NAME/pulls")
+          if test -z "$pr"
+          then
+            >&2 echo "INFO: There are no open pull requests at the moment."
+            exit 0
+          fi
+          pr=$(echo "$pr_json" | jq --arg title "$title" -r '.[] | select(.title == $title)')
+        fi
+        if test -z "$pr" || test "$pr" == 'null'
+        then
+          >&2 echo "ERROR: This PR was never created: $title";
+          exit 1
+        fi
+        existing_pr_url=$(jq -r .url <<< "$pr")
+        id=$(jq -r '.id' <<< "$pr")
+        pr_state=$(jq -r '.state' <<< "$pr")
+        merged_at=$(jq -r '.merged_at' <<< "$pr")
+        case "$pr_state" in
+          closed)
+            case "$merged_at" in
+              null)
+                >&2 echo "ERROR: Pull request was not accepted. Sorry :("
+                exit 1
+                ;;
+              *)
+                >&2 echo "INFO: Pull request was merged into $(params.trunk_branch) at: $merged_at"
+                exit 0
+                ;;
+            esac
+            ;;
+          open)
+            iterations=$((iterations+1)) 
+            >&2 echo "INFO: [$(date +%c)] Waiting for pull request to close: $existing_pr_url"
+            sleep 1m
+            ;;
+          *)
+            >&2 echo "ERROR: Invalid pull request state: $state"
+            exit 1
+            ;;
+        esac
+      done
+  - image: bitnami/git:2.44.0
+    name: delete-review-branch
+    script: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      git -C /workspace/repo remote update origin --prune
+      if git -C /workspace/repo branch --remote | grep -q $(params.review_branch_name)
+      then
+        git -C /workspace/repo checkout main
+        git -C /workspace/repo push --delete origin $(params.review_branch_name) || continue
+      else >&2 echo "INFO: Branch already deleted: $(params.review_branch_name)"
+      fi
+  - image: bash:5
+    name: write-approved-image-url
+    script: |
+      echo "$image_url" > "$(results.provided_image_url.path)"

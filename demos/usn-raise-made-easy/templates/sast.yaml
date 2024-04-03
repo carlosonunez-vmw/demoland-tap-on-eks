@@ -17,7 +17,7 @@ spec:
           type: PolicySucceeded
         - status: "False"
           type: Succeeded
-  lifecycle: mutable
+  lifecycle: tekton
   urlPath: .status.artifact.blob.url
   revisionPath: .status.artifact.blob.revision
   ytt: |
@@ -38,7 +38,7 @@ spec:
     apiVersion: scanning.apps.tanzu.vmware.com/v1beta1
     kind: SourceScan
     metadata:
-      name: #@ data.values.workload.metadata.name
+      generateName: #@ data.values.workload.metadata.name + "-"
       labels: #@ merge_labels({ "app.kubernetes.io/component": "image-scan" })
     spec:
       scanTemplate: #@ data.values.params.scanning_source_template
