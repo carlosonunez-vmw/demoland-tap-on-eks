@@ -341,4 +341,4 @@ spec:
   - image: bash:5
     name: write-approved-image-url
     script: |
-      echo "$image_url" > "$(results.provided_image_url.path)"
+      echo -n "$(params.image_url)" > "$(results.provided_image_url.path)"
