@@ -45,7 +45,9 @@ spec:
           sleep 1m
         fi
         grep -Eq '^http' <<< "$public_app_url" || public_app_url="https://$public_app_url"
+        >&2 echo "INFO: URL obtained after $attempt attempts: $public_app_url"
         echo "$public_app_url" > $(results.external-workload-url.path)
+        exit 0
       done
       >&2 echo "ERROR: Max attempts exceeded."
       exit 1
@@ -58,16 +60,17 @@ spec:
       attempt=0
       while test "$attempt" -lt "$max_attempts"
       do
-        result_code_message_map=$(cat <<-EOF
-        0:clean,0
-        1:failure-detected,1
-        2:clean-with-warnings,0
-        3:general-error,3
-        EOF
-        )
-
+        >&2 echo "INFO: [$attempt/$max_attempts] Starting new scan attempt."
         url=$(cat $(results.external-workload-url.path)) || exit 1
         >&2 echo "Scanning: $url"
+        result_code_message_map=$(cat <<-EOF
+      0:clean,0
+      1:failure-detected,1
+      2:clean-with-warnings,0
+      3:general-error,3
+      EOF
+      )
+
         zap-baseline.py -l WARN -t "$url" | tee $(results.scan-log.path)
         result="$?"
         result_message_with_code=$(echo "$result_code_message_map" |
